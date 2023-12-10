@@ -177,11 +177,13 @@ CREATE TABLE [dbo].[products](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[products]  WITH CHECK ADD  CONSTRAINT [FK_products_lecturers] FOREIGN KEY([supervisor_id])
+ALTER TABLE [dbo].[products]  WITH CHECK ADD
+CONSTRAINT [FK_products_lecturers] FOREIGN KEY([supervisor_id])
 REFERENCES [dbo].[lecturers] ([lecturer_id])
 GO
 
-ALTER TABLE [dbo].[products] CHECK CONSTRAINT [FK_products_lecturers]
+ALTER TABLE [dbo].[products] CHECK
+CONSTRAINT [FK_products_lecturers]
 GO
 ```
 
@@ -220,18 +222,22 @@ CREATE TABLE [dbo].[modules](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[modules]  WITH CHECK ADD  CONSTRAINT [FK_modules_lecturers] FOREIGN KEY([lecturer_id])
+ALTER TABLE [dbo].[modules]  WITH CHECK ADD
+CONSTRAINT [FK_modules_lecturers] FOREIGN KEY([lecturer_id])
 REFERENCES [dbo].[lecturers] ([lecturer_id])
 GO
 
-ALTER TABLE [dbo].[modules] CHECK CONSTRAINT [FK_modules_lecturers]
+ALTER TABLE [dbo].[modules] CHECK
+CONSTRAINT [FK_modules_lecturers]
 GO
 
-ALTER TABLE [dbo].[modules]  WITH CHECK ADD  CONSTRAINT [FK_modules_translators] FOREIGN KEY([translator_id])
+ALTER TABLE [dbo].[modules]  WITH CHECK ADD
+CONSTRAINT [FK_modules_translators] FOREIGN KEY([translator_id])
 REFERENCES [dbo].[translators] ([translator_id])
 GO
 
-ALTER TABLE [dbo].[modules] CHECK CONSTRAINT [FK_modules_translators]
+ALTER TABLE [dbo].[modules] CHECK
+CONSTRAINT [FK_modules_translators]
 GO
 ```
 
@@ -254,18 +260,22 @@ CREATE TABLE [dbo].[products_modules](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD  CONSTRAINT [FK_products_modules_modules] FOREIGN KEY([module_id])
+ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD
+CONSTRAINT [FK_products_modules_modules] FOREIGN KEY([module_id])
 REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[products_modules] CHECK CONSTRAINT [FK_products_modules_modules]
+ALTER TABLE [dbo].[products_modules] CHECK
+CONSTRAINT [FK_products_modules_modules]
 GO
 
-ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD  CONSTRAINT [FK_products_modules_products] FOREIGN KEY([product_id])
+ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD
+CONSTRAINT [FK_products_modules_products] FOREIGN KEY([product_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[products_modules] CHECK CONSTRAINT [FK_products_modules_products]
+ALTER TABLE [dbo].[products_modules] CHECK
+CONSTRAINT [FK_products_modules_products]
 GO
 ```
 
@@ -287,18 +297,22 @@ CREATE TABLE [dbo].[courses](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[courses]  WITH CHECK ADD  CONSTRAINT [FK_courses_course_types] FOREIGN KEY([type_id])
+ALTER TABLE [dbo].[courses]  WITH CHECK ADD
+CONSTRAINT [FK_courses_course_types] FOREIGN KEY([type_id])
 REFERENCES [dbo].[course_types] ([type_id])
 GO
 
-ALTER TABLE [dbo].[courses] CHECK CONSTRAINT [FK_courses_course_types]
+ALTER TABLE [dbo].[courses] CHECK
+CONSTRAINT [FK_courses_course_types]
 GO
 
-ALTER TABLE [dbo].[courses]  WITH CHECK ADD  CONSTRAINT [FK_courses_products] FOREIGN KEY([course_id])
+ALTER TABLE [dbo].[courses]  WITH CHECK ADD
+CONSTRAINT [FK_courses_products] FOREIGN KEY([course_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[courses] CHECK CONSTRAINT [FK_courses_products]
+ALTER TABLE [dbo].[courses] CHECK
+CONSTRAINT [FK_courses_products]
 GO
 ```
 
@@ -320,11 +334,13 @@ CREATE TABLE [dbo].[webinars](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[webinars]  WITH CHECK ADD  CONSTRAINT [FK_webinars_products] FOREIGN KEY([webinar_id])
+ALTER TABLE [dbo].[webinars]  WITH CHECK ADD
+CONSTRAINT [FK_webinars_products] FOREIGN KEY([webinar_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[webinars] CHECK CONSTRAINT [FK_webinars_products]
+ALTER TABLE [dbo].[webinars] CHECK
+CONSTRAINT [FK_webinars_products]
 GO
 ```
 
@@ -346,11 +362,13 @@ CREATE TABLE [dbo].[studies](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[studies]  WITH CHECK ADD  CONSTRAINT [FK_studies_products] FOREIGN KEY([studies_id])
+ALTER TABLE [dbo].[studies]  WITH CHECK ADD
+CONSTRAINT [FK_studies_products] FOREIGN KEY([studies_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[studies] CHECK CONSTRAINT [FK_studies_products]
+ALTER TABLE [dbo].[studies] CHECK
+CONSTRAINT [FK_studies_products]
 GO
 ```
 
@@ -398,18 +416,22 @@ CREATE TABLE [dbo].[studies_appreticeships](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD  CONSTRAINT [FK_studies_appreticeships_apprenticeships] FOREIGN KEY([apprenticeship_id])
+ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD
+CONSTRAINT [FK_studies_appreticeships_apprenticeships] FOREIGN KEY([apprenticeship_id])
 REFERENCES [dbo].[apprenticeships] ([apprenticeship_id])
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships] CHECK CONSTRAINT [FK_studies_appreticeships_apprenticeships]
+ALTER TABLE [dbo].[studies_appreticeships] CHECK
+CONSTRAINT [FK_studies_appreticeships_apprenticeships]
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD  CONSTRAINT [FK_studies_appreticeships_studies] FOREIGN KEY([studies_id])
+ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD
+CONSTRAINT [FK_studies_appreticeships_studies] FOREIGN KEY([studies_id])
 REFERENCES [dbo].[studies] ([studies_id])
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships] CHECK CONSTRAINT [FK_studies_appreticeships_studies]
+ALTER TABLE [dbo].[studies_appreticeships] CHECK
+CONSTRAINT [FK_studies_appreticeships_studies]
 GO
 
 
@@ -437,18 +459,22 @@ CREATE TABLE [dbo].[memberships](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[memberships]  WITH CHECK ADD  CONSTRAINT [FK_memberships_products] FOREIGN KEY([product_id])
+ALTER TABLE [dbo].[memberships]  WITH CHECK ADD
+CONSTRAINT [FK_memberships_products] FOREIGN KEY([product_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[memberships] CHECK CONSTRAINT [FK_memberships_products]
+ALTER TABLE [dbo].[memberships] CHECK
+CONSTRAINT [FK_memberships_products]
 GO
 
-ALTER TABLE [dbo].[memberships]  WITH CHECK ADD  CONSTRAINT [FK_memberships_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[memberships]  WITH CHECK ADD
+CONSTRAINT [FK_memberships_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[memberships] CHECK CONSTRAINT [FK_memberships_students]
+ALTER TABLE [dbo].[memberships] CHECK
+CONSTRAINT [FK_memberships_students]
 GO
 
 
@@ -475,18 +501,22 @@ CREATE TABLE [dbo].[attendance](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[attendance]  WITH CHECK ADD  CONSTRAINT [FK_attendance_modules] FOREIGN KEY([module_id])
+ALTER TABLE [dbo].[attendance]  WITH CHECK ADD
+CONSTRAINT [FK_attendance_modules] FOREIGN KEY([module_id])
 REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[attendance] CHECK CONSTRAINT [FK_attendance_modules]
+ALTER TABLE [dbo].[attendance] CHECK
+CONSTRAINT [FK_attendance_modules]
 GO
 
-ALTER TABLE [dbo].[attendance]  WITH CHECK ADD  CONSTRAINT [FK_attendance_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[attendance]  WITH CHECK ADD
+CONSTRAINT [FK_attendance_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[attendance] CHECK CONSTRAINT [FK_attendance_students]
+ALTER TABLE [dbo].[attendance] CHECK
+CONSTRAINT [FK_attendance_students]
 GO
 
 ```
@@ -514,55 +544,65 @@ CREATE TABLE [dbo].[shopping_cart](
 	[initial_fee_paid] [bit] NOT NULL,
 	[pay_deadline] [datetime] NOT NULL,
 	[completed] [bit] NOT NULL,
- CONSTRAINT [PK_shopping_cart] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_shopping_cart] PRIMARY KEY CLUSTERED
 (
 	[shopping_cart_id] ASC
 )
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD  CONSTRAINT [FK_shopping_cart_modules] FOREIGN KEY([module_id])
+ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD
+CONSTRAINT [FK_shopping_cart_modules] FOREIGN KEY([module_id])
 REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[shopping_cart] CHECK CONSTRAINT [FK_shopping_cart_modules]
+ALTER TABLE [dbo].[shopping_cart] CHECK
+CONSTRAINT [FK_shopping_cart_modules]
 GO
 
-ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD  CONSTRAINT [FK_shopping_cart_products] FOREIGN KEY([product_id])
+ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD
+CONSTRAINT [FK_shopping_cart_products] FOREIGN KEY([product_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[shopping_cart] CHECK CONSTRAINT [FK_shopping_cart_products]
+ALTER TABLE [dbo].[shopping_cart] CHECK
+CONSTRAINT [FK_shopping_cart_products]
 GO
 
-ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD  CONSTRAINT [FK_shopping_cart_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD
+CONSTRAINT [FK_shopping_cart_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[shopping_cart] CHECK CONSTRAINT [FK_shopping_cart_students]
+ALTER TABLE [dbo].[shopping_cart] CHECK
+CONSTRAINT [FK_shopping_cart_students]
 GO
 
 ```
+
 14. Tabela "translators"
 
 Tabela przechowująca identyfikatory tłumaczów
 
 - translator_id - numer id tłumacza (PK)
+
 ```sql
 CREATE TABLE [dbo].[translators](
 	[translator_id] [int] NOT NULL,
- CONSTRAINT [PK_translators] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_translators] PRIMARY KEY CLUSTERED
 (
 	[translator_id] ASC
 )
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[translators]  WITH CHECK ADD  CONSTRAINT [FK_translators_employees] FOREIGN KEY([translator_id])
+ALTER TABLE [dbo].[translators]  WITH CHECK ADD
+CONSTRAINT [FK_translators_employees] FOREIGN KEY([translator_id])
 REFERENCES [dbo].[employees] ([employee_id])
 GO
 
-ALTER TABLE [dbo].[translators] CHECK CONSTRAINT [FK_translators_employees]
+ALTER TABLE [dbo].[translators] CHECK
+CONSTRAINT [FK_translators_employees]
 GO
 
 ```
@@ -576,18 +616,20 @@ Tabela przechowująca identyfikatory wykładowców
 ```sql
 CREATE TABLE [dbo].[lecturers](
 	[lecturer_id] [int] NOT NULL,
- CONSTRAINT [PK_lecturers] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_lecturers] PRIMARY KEY CLUSTERED
 (
 	[lecturer_id] ASC
 )
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[lecturers]  WITH CHECK ADD  CONSTRAINT [FK_lecturers_employees] FOREIGN KEY([lecturer_id])
+ALTER TABLE [dbo].[lecturers]  WITH CHECK ADD
+CONSTRAINT [FK_lecturers_employees] FOREIGN KEY([lecturer_id])
 REFERENCES [dbo].[employees] ([employee_id])
 GO
 
-ALTER TABLE [dbo].[lecturers] CHECK CONSTRAINT [FK_lecturers_employees]
+ALTER TABLE [dbo].[lecturers] CHECK
+CONSTRAINT [FK_lecturers_employees]
 GO
 
 ```
