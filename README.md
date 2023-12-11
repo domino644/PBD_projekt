@@ -54,9 +54,13 @@ Tomasz Żmuda, Konrad Konsek, Jakub Cieszewski
 
 - Zarządzanie praktykami (dodaj, usuń, edytuj, przypisz do studiów)
 
+<div style="page-break-after: always;"></div>
+
 ## 2. Diagram bazy danych
 
 ![diagram bazy danych](diagram.png)
+
+<div style="page-break-after: always;"></div>
 
 ## 3. Opis tabel
 
@@ -97,6 +101,8 @@ CREATE TABLE [dbo].[students](
 )
 ) ON [PRIMARY]
 ```
+
+<div style="page-break-after: always;"></div>
 
 2. Tabela “employees”
 
@@ -142,6 +148,8 @@ CREATE TABLE [dbo].[employees](
 ) ON [PRIMARY]
 ```
 
+<div style="page-break-after: always;"></div>
+
 3. Tabela “products”
 
 Informacje o dostępnych produktach (webinary, kursy, studia). 
@@ -186,6 +194,8 @@ ALTER TABLE [dbo].[products] CHECK
 CONSTRAINT [FK_products_lecturers]
 GO
 ```
+
+<div style="page-break-after: always;"></div>
 
 4. Tabela “modules”
 
@@ -241,6 +251,8 @@ CONSTRAINT [FK_modules_translators]
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 5. Tabela “products_modules”
 
 Tabela służąca do przyporządkowania modułów do studiów.
@@ -279,6 +291,8 @@ CONSTRAINT [FK_products_modules_products]
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 6. Tabela “courses”
 
 Informacja o typie kursu – stacjonarny/online synchroniczny/online asynchroniczny/hybrydowy.
@@ -316,6 +330,8 @@ CONSTRAINT [FK_courses_products]
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 7. Tabela “webinars”
 
 Zawiera linki do webinarów.
@@ -343,6 +359,8 @@ ALTER TABLE [dbo].[webinars] CHECK
 CONSTRAINT [FK_webinars_products]
 GO
 ```
+
+<div style="page-break-after: always;"></div>
 
 8. Tabela “studies”
 
@@ -372,6 +390,8 @@ CONSTRAINT [FK_studies_products]
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 9. Tabela “apprenticeships”
 
 Informację o praktykach: nazwa, data rozpoczęcia i zakończenia
@@ -393,9 +413,9 @@ CREATE TABLE [dbo].[apprenticeships](
 )
 ) ON [PRIMARY]
 GO
-
-
 ```
+
+<div style="page-break-after: always;"></div>
 
 10. Tabela “studies_apprenticeships”
 
@@ -433,9 +453,9 @@ GO
 ALTER TABLE [dbo].[studies_appreticeships] CHECK
 CONSTRAINT [FK_studies_appreticeships_studies]
 GO
-
-
 ```
+
+<div style="page-break-after: always;"></div>
 
 11. Tabela “modules_memberships”
 
@@ -484,6 +504,8 @@ CONSTRAINT [FK_shopping_cart_students]
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 12. Tabela “attendance”
 
 Tabela przechowująca informację o obecności studentów na modułach.
@@ -524,6 +546,8 @@ CONSTRAINT [FK_attendance_students]
 GO
 
 ```
+
+<div style="page-break-after: always;"></div>
 
 13. Tabela “products_memberships”
 
@@ -568,8 +592,9 @@ GO
 ALTER TABLE [dbo].[products_memberships] CHECK
 CONSTRAINT [FK_products_memberships_products]
 GO
-
 ```
+
+<div style="page-break-after: always;"></div>
 
 14. Tabela "translators"
 
@@ -598,6 +623,8 @@ GO
 
 ```
 
+<div style="page-break-after: always;"></div>
+
 15. Tabela "lecturers"
 
 Tabela przechowująca identyfikatory wykładowców
@@ -624,4 +651,5 @@ CONSTRAINT [FK_lecturers_employees]
 GO
 
 ```
+
 
