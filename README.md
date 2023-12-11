@@ -245,8 +245,8 @@ GO
 
 Tabela służąca do przyporządkowania modułów do studiów.
 
-- module_id - numer id modułu (FK)
-- product_id - numer id produktu (FK)
+- module_id - numer id modułu (PK)
+- product_id - numer id produktu (PK)
 
 ```sql
 CREATE TABLE [dbo].[products_modules](
@@ -401,8 +401,8 @@ GO
 
 Tabela służąca do przyporządkowania praktyk do studiów
 
-- apprenticeship_id - numer id praktyk (FK)
-- studies_id - numer id studiów (FK)
+- apprenticeship_id - numer id praktyk (PK)
+- studies_id - numer id studiów (PK)
 
 ```sql
 CREATE TABLE [dbo].[studies_appreticeships](
@@ -439,8 +439,15 @@ GO
 
 11. Tabela “modules_memberships”
 
-TUTAJ OPIS DLA MODULES_MEMBERSHIPS,
-wygenerowany kod jest juz ok
+Tabela służąca do przechowywania modułów posiadanych przez studentów, w tym tych jeszcze nie opłaconych
+
+- student_id - numer id studenta do którego należy moduł (PK)
+- module_id - numer id modułu (PK)
+- paid - informacja czy opłata za moduł została wpłacona
+- initial_fee_paid - informacja czy zaliczka za moduł została wpłacona
+- discount - zniżka
+- pay_deadline - data do której trzeba wpłacić opłatę za moduł
+- completed - informacja czy moduł został zaliczony
 
 ```sql
 CREATE TABLE [dbo].[modules_memberships](
@@ -481,8 +488,8 @@ GO
 
 Tabela przechowująca informację o obecności studentów na modułach.
 
-- student_id - numer id studenta (FK)
-- module_id - numer id modułu (FK)
+- student_id - numer id studenta (PK)
+- module_id - numer id modułu (PK)
 - attended - informacja o tym czy student był obecny na module
 
 ```sql
@@ -520,8 +527,14 @@ GO
 
 13. Tabela “products_memberships”
 
-TUTAJ OPIS DLA PRODUCTS_MEMBERSHIPS
-wygenerowany kod jest juz ok
+Tabela służąca do przechowywania produktów posiadanych przez studentów, w tym tych jeszcze nie opłaconych
+
+- student_id - numer id studenta do którego należy moduł (PK)
+- product_id - numer id produktu (PK)
+- paid - informacja czy opłata za produkt została wpłacona
+- initial_fee_paid - informacja czy zaliczka za produkt została wpłacona
+- discount - zniżka
+- pay_deadline - data do której trzeba wpłacić opłatę za produkt
 
 ```sql
 CREATE TABLE [dbo].[products_memberships](
@@ -611,3 +624,4 @@ CONSTRAINT [FK_lecturers_employees]
 GO
 
 ```
+
