@@ -437,47 +437,44 @@ GO
 
 ```
 
-11. Tabela “memberships”
+11. Tabela “modules_memberships”
 
-Tabela przechowująca kursy należące do studentów wraz z datą wygaśnięcia przynależności.
-
-- membership_id - numer id każdej przynależności (PK)
-- product_id - numer id produktu (FK)
-- student_id - numer id studenta (FK)
-- expire_date - data wygaśnięcia przynależności
+TUTAJ OPIS DLA MODULES_MEMBERSHIPS,
+wygenerowany kod jest juz ok
 
 ```sql
-CREATE TABLE [dbo].[memberships](
-	[membership_id] [int] NOT NULL,
-	[product_id] [int] NOT NULL,
+CREATE TABLE [dbo].[modules_memberships](
 	[student_id] [int] NOT NULL,
-	[expire_date] [datetime] NULL,
- CONSTRAINT [PK_memberships] PRIMARY KEY CLUSTERED
+	[module_id] [int] NOT NULL,
+	[paid] [bit] NOT NULL,
+	[initial_fee_paid] [bit] NOT NULL,
+	[discount] [float] NOT NULL,
+	[pay_deadline] [datetime] NOT NULL,
+	[completed] [bit] NOT NULL,
+ CONSTRAINT [PK_shopping_cart_1] PRIMARY KEY CLUSTERED
 (
-	[membership_id] ASC
-)
-) ON [PRIMARY]
+	[student_id] ASC,
+	[module_id] ASC
+)) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[memberships]  WITH CHECK ADD
-CONSTRAINT [FK_memberships_products] FOREIGN KEY([product_id])
-REFERENCES [dbo].[products] ([product_id])
+ALTER TABLE [dbo].[modules_memberships]  WITH CHECK ADD
+CONSTRAINT [FK_modules_memberships_modules] FOREIGN KEY([module_id])
+REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[memberships] CHECK
-CONSTRAINT [FK_memberships_products]
+ALTER TABLE [dbo].[modules_memberships] CHECK
+CONSTRAINT [FK_modules_memberships_modules]
 GO
 
-ALTER TABLE [dbo].[memberships]  WITH CHECK ADD
-CONSTRAINT [FK_memberships_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[modules_memberships]  WITH CHECK ADD
+CONSTRAINT [FK_shopping_cart_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[memberships] CHECK
-CONSTRAINT [FK_memberships_students]
+ALTER TABLE [dbo].[modules_memberships] CHECK
+CONSTRAINT [FK_shopping_cart_students]
 GO
-
-
 ```
 
 12. Tabela “attendance”
@@ -521,61 +518,42 @@ GO
 
 ```
 
-13. Tabela “shopping_cart”
+13. Tabela “products_memberships”
 
-Tabela przechowująca przedmioty oczekujące na płatność przez studenta wraz z informacjami o kwocie do opłacenia oraz terminie opłaty.
-
-- shopping_cart_id - numer id każdego koszyka (PK)
-- student_id - numer id student (FK)
-- product_id - numer id produntu zakupu (FK), może być pusty
-- module_id - numer id modułu do zakupu (FK), może być pusty
-- paid - informacja o tym czy zakup został opłacony
-- initial_fee_paid - informacja o tym czy zaliczka została wpłacona
-- pay_deadline - ostateczny termin opłaty
-- completed - informacja o statusie realizacji zamówienia
+TUTAJ OPIS DLA PRODUCTS_MEMBERSHIPS
+wygenerowany kod jest juz ok
 
 ```sql
-CREATE TABLE [dbo].[shopping_cart](
-	[shopping_cart_id] [int] NOT NULL,
+CREATE TABLE [dbo].[products_memberships](
 	[student_id] [int] NOT NULL,
-	[product_id] [int] NULL,
-	[module_id] [int] NULL,
+	[product_id] [int] NOT NULL,
 	[paid] [bit] NOT NULL,
 	[initial_fee_paid] [bit] NOT NULL,
+	[discount] [float] NOT NULL,
 	[pay_deadline] [datetime] NOT NULL,
-	[completed] [bit] NOT NULL,
- CONSTRAINT [PK_shopping_cart] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_memberships_1] PRIMARY KEY CLUSTERED
 (
-	[shopping_cart_id] ASC
-)
-) ON [PRIMARY]
+	[student_id] ASC,
+	[product_id] ASC
+)) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD
-CONSTRAINT [FK_shopping_cart_modules] FOREIGN KEY([module_id])
-REFERENCES [dbo].[modules] ([module_id])
-GO
-
-ALTER TABLE [dbo].[shopping_cart] CHECK
-CONSTRAINT [FK_shopping_cart_modules]
-GO
-
-ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD
-CONSTRAINT [FK_shopping_cart_products] FOREIGN KEY([product_id])
-REFERENCES [dbo].[products] ([product_id])
-GO
-
-ALTER TABLE [dbo].[shopping_cart] CHECK
-CONSTRAINT [FK_shopping_cart_products]
-GO
-
-ALTER TABLE [dbo].[shopping_cart]  WITH CHECK ADD
-CONSTRAINT [FK_shopping_cart_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[products_memberships]  WITH CHECK ADD
+CONSTRAINT [FK_memberships_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[shopping_cart] CHECK
-CONSTRAINT [FK_shopping_cart_students]
+ALTER TABLE [dbo].[products_memberships] CHECK
+CONSTRAINT [FK_memberships_students]
+GO
+
+ALTER TABLE [dbo].[products_memberships]  WITH CHECK ADD
+CONSTRAINT [FK_products_memberships_products] FOREIGN KEY([product_id])
+REFERENCES [dbo].[products] ([product_id])
+GO
+
+ALTER TABLE [dbo].[products_memberships] CHECK
+CONSTRAINT [FK_products_memberships_products]
 GO
 
 ```
