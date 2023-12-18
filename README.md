@@ -651,25 +651,30 @@ CONSTRAINT [FK_lecturers_employees]
 GO
 ```
 
-#Views
+# Widoki
+
 1. Widok showAllModules
+   
 Wyświetla wszystkie moduły z wszystkimi informacjami
+
 ```sql
 CREATE VIEW [dbo].[showAllModules]
 AS
-    SELECT module_id, module_name, type, start_date, end_date, 
+    SELECT module_id, module_name, type, start_date, end_date,
         classroom, lecturer_id, translator_id, students_limit, single_buy_price
     FROM     dbo.modules
 GO
 ```
 
 2. Widok showNotStartedModules
+
 Wyświetla moduły które jeszcze się nie zaczęły
+
 ```sql
 CREATE VIEW [dbo].[showNotStartedModules]
 AS
-    SELECT module_id, module_name, type, start_date, 
-        end_date, classroom, lecturer_id, translator_id, 
+    SELECT module_id, module_name, type, start_date,
+        end_date, classroom, lecturer_id, translator_id,
         students_limit, single_buy_price
     FROM dbo.modules
     WHERE  (start_date > GETDATE())
@@ -677,18 +682,23 @@ GO
 ```
 
 3. Widok showNotStartedProducts
+
 Wyświetla produkty które jescze się nie zaczęły
+
 ```sql
 CREATE VIEW [dbo].[showNotStartedProducts]
 AS
-    SELECT product_id, product_name, start_date, end_date, 
-        type, price, initial_fee, supervisor_id, language, 
+    SELECT product_id, product_name, start_date, end_date,
+        type, price, initial_fee, supervisor_id, language,
         students_limit
     FROM dbo.products
 WHERE  (start_date > GETDATE())
 GO
 ```
-4. Widok wyświetla wszystkie webinaria
+
+4. Widok showAllWebinars
+
+Wyświetla wszystkie webinaria
 
 ```sql
 create view [dbo].[showAllWebinars] as
@@ -698,7 +708,9 @@ where type = 'webinar'
 GO
 ```
 
-5. Widok wyświetla wszyste dostępne produkty
+5. Widok showAllCourses
+
+Wyświetla wszyste dostępne produkty
 
 ```sql
 create view [dbo].[showAllCourses] as
@@ -708,14 +720,43 @@ where type = 'course'
 GO
 ```
 
-#Procedures
+6. Widok showAllStudentsWithModuleDebt
+
+Wyświetla wszystkich studentów, którzy zalegają z opłatami za moduły
+
+```sql
+CREATE VIEW [dbo].[showAllStudentsWithModuleDebt]
+AS
+SELECT DISTINCT s.name, s.surname
+FROM            dbo.modules_memberships AS mm INNER JOIN
+                         dbo.students AS s ON mm.student_id = s.student_id AND mm.paid = 0
+GO
+
+```
+
+7. Widok showAllStudentsWithProductDebt
+
+Wyświetla wszystkich studentów, którzy zalegają z opłatami za produkty
+
+```sql
+CREATE VIEW [dbo].[showAllStudentsWithProductDebt]
+AS
+SELECT DISTINCT s.name, s.surname
+FROM            dbo.products_memberships AS pm INNER JOIN
+                         dbo.students AS s ON pm.student_id = s.student_id AND pm.paid = 0
+GO
+```
+
+# Procedures
 
 1. Procedura changeStudentContactInfo
-Pozwala zmienić wszystkie dane kontaktowe studenta
+   
+Zmienia wszystkie dane kontaktowe studenta
+
 ```sql
 CREATE PROCEDURE [dbo].[changeStudentContactInfo]
 	@id int,
-	@country varchar(50), 
+	@country varchar(50),
 	@city varchar(50),
 	@adress varchar(50),
 	@postal_code varchar(50),
@@ -727,8 +768,8 @@ BEGIN
 	BEGIN TRY
 		BEGIN
 			UPDATE students
-				SET country = @country, city = @city, 
-                                    adress = @adress, postal_code = @postal_code, 
+				SET country = @country, city = @city,
+                                    adress = @adress, postal_code = @postal_code,
                                     phone = @phone, email = @email
 				where student_id = @id
 		END
@@ -743,7 +784,9 @@ GO
 ```
 
 2. Procedura changeAttendance
-Pozwala zmienić staus obecności studenta na danym module na obecny
+   
+Zmienia status obecności studenta na danym module na obecny
+
 ```sql
 CREATE PROCEDURE [dbo].[changeAttendance]
 	@student_id int,
@@ -755,7 +798,7 @@ BEGIN
 		BEGIN
 			UPDATE attendance
 				set attended = 1
-				where student_id = @student_id and 
+				where student_id = @student_id and
                                     module_id = @module_id
 		END
 	END TRY
@@ -769,11 +812,13 @@ GO
 ```
 
 3. Procedura changeEmployeeContactInfo
-Pozwala zmienić danek konraktowe pracowników
+   
+Zmienia danek konraktowe pracowników
+
 ```sql
 CREATE PROCEDURE [dbo].[changeEmployeeContactInfo]
 	@id int,
-	@country varchar(50), 
+	@country varchar(50),
 	@city varchar(50),
 	@adress varchar(50),
 	@postal_code varchar(50),
@@ -785,8 +830,8 @@ BEGIN
 	BEGIN TRY
 		BEGIN
 			UPDATE employees
-				set country = @country, city = @city, 
-                                    adress = @adress, postal_code = @postal_code, 
+				set country = @country, city = @city,
+                                    adress = @adress, postal_code = @postal_code,
                                     phone = @phone, email = @email
 				where employee_id = @id
 		END
@@ -801,7 +846,9 @@ GO
 ```
 
 4. Procedura changeExamToPassed
-Pozwala ustawić status zaliczenia danego egzaminu na zaliczony
+   
+Ustawia status zaliczenia danego egzaminu na zaliczony
+
 ```sql
 CREATE PROCEDURE [dbo].[changeExamToPassed]
 	@student_id int,
@@ -813,7 +860,7 @@ BEGIN
 		BEGIN
 			UPDATE studies_exam
 				set passed = 1
-				where student_id = @student_id and 
+				where student_id = @student_id and
                                     studies_id = @studies_id
 		END
 	END TRY
@@ -827,7 +874,9 @@ GO
 ```
 
 5. Procedura changeModulePaidStatus
-Pozwala zmienić status płatności dla modułu i studenta
+   
+Zmienia status płatności dla modułu i studenta
+
 ```sql
 CREATE PROCEDURE [dbo].[changeModulePaidStatus]
 	@student_id int,
@@ -840,9 +889,9 @@ BEGIN
 	BEGIN TRY
 		BEGIN
 			UPDATE modules_memberships
-				set initial_fee_paid = @initial_fee_paid_status, 
+				set initial_fee_paid = @initial_fee_paid_status,
                                     paid = @normal_price_paid_status
-				where student_id = @student_id and 
+				where student_id = @student_id and
                                     module_id = @module_id
 		END
 	END TRY
@@ -856,7 +905,9 @@ GO
 ```
 
 6. Procedura changeProductPaidStatus
-Pozwala zmienić status płatności dla danego produktu i studenta
+   
+Zmienia status płatności dla danego produktu i studenta
+
 ```sql
 CREATE PROCEDURE [dbo].[changeProductPaidStatus]
 	@student_id int,
@@ -869,9 +920,9 @@ BEGIN
 	BEGIN TRY
 		BEGIN
 			UPDATE products_memberships
-				set initial_fee_paid = @initial_fee_paid_status, 
+				set initial_fee_paid = @initial_fee_paid_status,
                                     paid = @normal_price_paid_status
-				where student_id = @student_id and 
+				where student_id = @student_id and
                                     product_id = @product_id
 		END
 	END TRY
@@ -885,7 +936,9 @@ GO
 ```
 
 7. Procedura createWebinar
-Pozwala stworzyć nowy webinar
+
+Tworzy nowy webinar
+
 ```sql
 CREATE PROCEDURE [dbo].[createWebinar]
 	@product_name varchar(50),
@@ -908,8 +961,8 @@ BEGIN
 			END
 
 		IF not exists(
-				select * 
-                from lecturers 
+				select *
+                from lecturers
                 where lecturer_id = @supervisor_id
 			)
 			BEGIN
@@ -963,10 +1016,216 @@ END
 GO
 ```
 
-8. Procedura deleteWebinar
-Pozwala usunąć webinar
+8. Procedura createCourse
+
+Tworzy kurs
 ```sql
-CREATE PROCEDURE [dbo].[deleteWebinar] 
+
+CREATE PROCEDURE [dbo].[createCourse]
+@product_name varchar(50),
+@start_date datetime,
+@end_date datetime,
+@price float,
+@initial_fee float,
+@supervisor_id int,
+@language varchar(50),
+@students_limit int,
+@type_id int
+	
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		IF @start_date > @end_date
+			BEGIN
+			;
+			THROW 52000, N'Daty nie mają sensu', 1
+			END
+
+		IF not exists(
+				select * from lecturers where lecturer_id = @supervisor_id
+			)
+			BEGIN
+			;
+			THROW 52000, N'Wykłądowca nie istnieje', 1
+			END
+
+		DECLARE @product_id INT
+		SELECT @product_id = ISNULL(MAX(product_id), 0) + 1
+		from products
+
+		DECLARE @type varchar(50)
+		SELECT @type = 'course'
+
+		INSERT INTO [dbo].[products]
+				([product_id]
+				,[product_name]
+				,[start_date]
+				,[end_date]
+				,[type]
+				,[price]
+				,[initial_fee]
+				,[supervisor_id]
+				,[language]
+				,[students_limit])
+			VALUES
+				(@product_id
+				,@product_name
+				,@start_date
+				,@end_date
+				,@type
+				,@price
+				,@initial_fee
+				,@supervisor_id
+				,@language
+				,@students_limit)
+
+		INSERT INTO [dbo].[courses]
+				([course_id]
+				,[type_id])
+			 VALUES
+				(@product_id
+				,@type_id)
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z dodawaniem nowego kursu: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+9. Procedura createStudies
+
+Tworzy studia
+```sql
+CREATE PROCEDURE [dbo].[createStudies]
+	-- Add the parameters for the stored procedure here
+	@product_name varchar(50),
+	@start_date datetime,
+	@end_date datetime,
+	@price float,
+	@initial_fee float,
+	@supervisor_id int,
+	@language varchar(50),
+	@students_limit int,
+	@syllabus_link varchar(100)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	begin try
+    IF @start_date > @end_date
+			BEGIN
+			;
+			THROW 52000, N'Daty nie mają sensu', 1
+			END
+
+		IF not exists(
+				select * from lecturers where lecturer_id = @supervisor_id
+			)
+			BEGIN
+			;
+			THROW 52000, N'Wykłądowca nie istnieje', 1
+			END
+
+		DECLARE @product_id INT
+		SELECT @product_id = ISNULL(MAX(product_id), 0) + 1
+		from products
+
+		DECLARE @type varchar(50)
+		SELECT @type = 'course'
+
+		INSERT INTO [dbo].[products]
+				([product_id]
+				,[product_name]
+				,[start_date]
+				,[end_date]
+				,[type]
+				,[price]
+				,[initial_fee]
+				,[supervisor_id]
+				,[language]
+				,[students_limit])
+			VALUES
+				(@product_id
+				,@product_name
+				,@start_date
+				,@end_date
+				,@type
+				,@price
+				,@initial_fee
+				,@supervisor_id
+				,@language
+				,@students_limit)
+		insert into [dbo].[studies]
+		([studies_id],[sylabus_link])
+		values
+		(@product_id, @syllabus_link)
+END try
+BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z dodawaniem nowych studiów: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+end
+GO
+```
+10. Procedura createApprenticeship
+
+Tworzy praktyki
+```sql
+CREATE PROCEDURE [dbo].[createApprenticeship]
+	-- Add the parameters for the stored procedure here
+	@apprenticeship_name varchar(50),
+	@start_date datetime,
+	@end_date datetime
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+		if @start_date > @end_date
+   begin;
+	throw 52000, N'Daty nie mają sensu', 1
+   end
+   DECLARE @apprenticeship_id INT
+		SELECT @apprenticeship_id = ISNULL(MAX(apprenticeship_id), 0) + 1
+		from apprenticeships
+	insert into apprenticeships
+	(apprenticeship_id,
+	apprenticeship_name,
+	start_date,
+	end_date)
+	values
+	(@apprenticeship_id,
+	@apprenticeship_name,
+	@start_date,
+	@end_date)
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z tworzeniem kursu: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+
+
+
+```
+
+
+111. Procedura deleteWebinar
+   
+Usuwa webinar
+
+```sql
+CREATE PROCEDURE [dbo].[deleteWebinar]
 	@webinar_id int
 AS
 BEGIN
@@ -990,8 +1249,153 @@ END
 GO
 ```
 
-9. Procedura editWebinar
-pozwala zmienić informacje o webinarze
+12. Procedura deleteStudies
+
+Usuwa studia
+
+```sql
+CREATE PROCEDURE [dbo].[deleteStudies] 
+	-- Add the parameters for the stored procedure here
+	@studies_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+	if not exists(
+	select * from products where product_id = @studies_id)
+	BEGIN
+			;
+			THROW 52000, N'Studia nie istnieją', 1
+			END
+	delete from products where product_id = @studies_id
+	delete from studies where studies_id = @studies_id
+end try
+begin catch
+	DECLARE @msg nvarchar(2048)
+			=N'Błąd z usuwaniem studiów: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	end catch
+END
+GO
+```
+
+13. Procedura deleteCourse
+
+Usuwa kurs
+
+```sql
+CREATE PROCEDURE [dbo].[deleteCourse] 
+	-- Add the parameters for the stored procedure here
+	@course_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+		if not exists(
+			select * from products where product_id = @course_id
+		)
+		BEGIN
+			;
+			THROW 52000, N'Kurs nie istnieje', 1
+			END
+		delete from products where product_id = @course_id
+		delete from courses where course_id = @course_id
+	end try
+	begin catch
+	DECLARE @msg nvarchar(2048)
+			=N'Błąd z usuwaniem kursu: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	end catch
+END
+GO
+
+```
+
+14. Procedura deleteApprenticeship
+
+Usuwa praktyki
+```sql
+CREATE PROCEDURE [dbo].[deleteApprenticeship]
+	-- Add the parameters for the stored procedure here
+	@apprenticeship_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+   begin try
+	if not exists(
+	select * from apprenticeships where apprenticeship_id = @apprenticeship_id
+	)
+	 begin;
+	throw 52000, N'Dane praktyki nie istnieją', 1
+   end
+
+   delete from apprenticeships where apprenticeship_id = @apprenticeship_id
+
+   end try
+   BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z usuwaniem praktyk: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+15. Procedura deleteEmployee
+
+Usuwa pracownika
+
+```sql
+CREATE PROCEDURE [dbo].[deleteEmployee]
+	@employee_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+	if not exists(select * from employees where employee_id = @employee_id)
+	begin;
+		throw 52000, N'Dany pracownik nie istnieje', 1
+	end
+
+	delete from employees where employee_id = @employee_id
+
+	if @employee_id in (select lecturer_id from lecturers)
+	begin;
+	delete from lecturers where lecturer_id = @employee_id
+	end
+
+	if @employee_id in (select translator_id from translators)
+	begin;
+	delete from translators where translator_id = @employee_id
+	end
+
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd przy usuwaniu pracownika ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+
+```
+
+16. Procedura editWebinar
+
+Zmienia informacje o webinarze
+
 ```sql
 CREATE PROCEDURE [dbo].[editWebinar]
 	@webinar_id int,
@@ -1025,21 +1429,21 @@ BEGIN
 
 	if not exists(
 		select * from lecturers where lecturer_id=@new_supervisor_id
-	)		
+	)
 			begin;
 			throw 52000, N'Wykładowca nie istnieje', 1
 			end
 
 
 	update products
-	set 
-	product_name = @new_product_name, 
-	start_date = @new_start_date, 
-	end_date = @new_end_date, 
-	type='webinar', 
-	price=@new_price, 
-	initial_fee = @new_initial_fee, 
-	supervisor_id = @new_supervisor_id, 
+	set
+	product_name = @new_product_name,
+	start_date = @new_start_date,
+	end_date = @new_end_date,
+	type='webinar',
+	price=@new_price,
+	initial_fee = @new_initial_fee,
+	supervisor_id = @new_supervisor_id,
 	language = @new_language,
 	students_limit = @new_students_limit
 	where product_id = @webinar_id
@@ -1057,8 +1461,217 @@ END
 GO
 ```
 
+17.  Procedura editStudies
 
-10 .Procedura getApprenticeshipsForStudies wyświetla wszystkie praktyki dla danych studiów
+Edytuje studia
+
+```sql
+CREATE PROCEDURE [dbo].[editStudies]
+	@studies_id int,
+	@new_product_name varchar(50),
+	@new_start_date datetime,
+	@new_end_date datetime,
+	@new_type varchar(50),
+	@new_price float,
+	@new_initial_fee float,
+	@new_supervisor_id int,
+	@new_language varchar(50),
+	@new_students_limit int,
+	@new_syllabus_link varchar(100)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+		if @new_start_date > @new_end_date
+   begin;
+	throw 52000, N'Daty nie mają sensu', 1
+   end
+
+   if not exists(
+	select * from products where product_id=@studies_id
+   )
+   BEGIN
+			;
+			THROW 52000, N'Kurs nie istnieje', 1
+	END
+
+	if not exists(
+		select * from lecturers where lecturer_id=@new_supervisor_id
+	)		
+			begin;
+			throw 52000, N'Wykładowca nie istnieje', 1
+			end
+
+	update products
+	set 
+	product_name = @new_product_name, 
+	start_date = @new_start_date, 
+	end_date = @new_end_date, 
+	type=@new_type, 
+	price=@new_price, 
+	initial_fee = @new_initial_fee, 
+	supervisor_id = @new_supervisor_id, 
+	language = @new_language,
+	students_limit = @new_students_limit
+	where product_id = @studies_id
+
+	update studies
+	set sylabus_link = @new_syllabus_link
+	where studies_id=@studies_id
+
+	end try
+
+	begin catch
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z aktualizowaniem studiów: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	end catch
+END
+GO
+```
+18. Procedura editCourse
+
+Edytuje kurs
+
+```sql
+CREATE PROCEDURE [dbo].[editCourse]
+	-- Add the parameters for the stored procedure here
+	@course_id int,
+	@new_product_name varchar(50),
+	@new_start_date datetime,
+	@new_end_date datetime,
+	@new_type varchar(50),
+	@new_price float,
+	@new_initial_fee float,
+	@new_supervisor_id int,
+	@new_language varchar(50),
+	@new_students_limit int,
+	@new_type_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+   begin try
+
+   if @new_start_date > @new_end_date
+   begin;
+	throw 52000, N'Daty nie mają sensu', 1
+   end
+
+   if not exists(
+	select * from products where product_id=@course_id
+   )
+   BEGIN
+			;
+			THROW 52000, N'Kurs nie istnieje', 1
+	END
+
+	if not exists(
+		select * from lecturers where lecturer_id=@new_supervisor_id
+	)		
+			begin;
+			throw 52000, N'Wykładowca nie istnieje', 1
+			end
+	if not exists(
+	select * from course_types where type_id=@new_type_id)
+	begin;
+	throw 52000, N'type kursu nie istnieje', 1
+	end
+
+	if @new_type not in ('webinar', 'course','studies')
+	begin;
+	throw 52000, N'nieprawidłowy typ produktu', 1
+	end
+
+
+	update products
+	set 
+	product_name = @new_product_name, 
+	start_date = @new_start_date, 
+	end_date = @new_end_date, 
+	type=@new_type, 
+	price=@new_price, 
+	initial_fee = @new_initial_fee, 
+	supervisor_id = @new_supervisor_id, 
+	language = @new_language,
+	students_limit = @new_students_limit
+	where product_id = @course_id
+
+	update courses
+	set type_id = @new_type_id
+	where course_id = @course_id
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z aktualizowaniem kursu: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+
+
+```
+
+19. Procedura editApprenticeship
+
+Edytuje praktyki
+
+```sql
+CREATE PROCEDURE [dbo].[editApprenticeship]
+	@apprenticeship_id int,
+	@new_apprenticeship_name varchar(50),
+	@new_start_date datetime,
+	@new_end_date datetime
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+		
+		if @new_start_date > @new_end_date
+			begin;
+	throw 52000, N'Daty nie mają sensu', 1
+   end
+
+		if not exists(
+		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
+		)
+		begin;
+	throw 52000, N'Dane praktyki nie istnieją', 1
+   end
+
+   update apprenticeships
+   set
+   apprenticeship_name = @new_apprenticeship_name,
+   start_date = @new_start_date,
+   end_date = @new_end_date
+   where 
+   apprenticeship_id = @apprenticeship_id
+	end try
+
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z aktualizowaniem praktyk: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+
+```
+
+
+
+
+20. Procedura getApprenticeshipsForStudies 
+
+Wyświetla wszystkie praktyki dla danych studiów
 
 ```sql
 CREATE PROCEDURE [dbo].[getApprenticeshipsForStudies] @studiesId int
@@ -1070,7 +1683,9 @@ AS
 GO
 ```
 
-11. Procedura addNewStudent dodaje nowego studenta do bazy
+21.  Procedura addNewStudent 
+
+Dodaje nowego studenta do bazy
 
 ```sql
 CREATE PROCEDURE [dbo].[addNewStudent]
@@ -1119,8 +1734,91 @@ END;
 GO
 ```
 
+22. Procedura addEmployee
 
-12. Procedura addModuleMembership dodaje moduł do koszyka
+Dodaje pracownika
+
+```sql
+CREATE PROCEDURE [dbo].[addEmployee]
+	-- Add the parameters for the stored procedure here
+	@role varchar(50),
+	@name varchar(50),
+	@second_name varchar(50),
+	@surname varchar(50),
+	@birth_date date,
+	@country varchar(50),
+	@city varchar(50),
+	@adress varchar(50),
+	@postal_code varchar(50),
+	@phone varchar(50),
+	@email varchar(50),
+	@password varchar(50),
+	@title_of_courtesy varchar(10),
+	@hire_date date
+
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+		if @hire_date > @birth_date
+			begin;
+				throw 52000, N'Nie można się zatrudnić przed narodzinami', 1
+			end
+	DECLARE @employee_id INT
+		SELECT @employee_id = ISNULL(MAX(employee_id), 0) + 1
+		from employees
+	insert into employees
+	(employee_id,
+	role,
+	name,
+	second_name,
+	surname,
+	birth_date,
+	country,
+	city,
+	adress,
+	postal_code,
+	phone,
+	email,
+	password,
+	title_of_courtesy,
+	hire_date)
+	values(
+	@employee_id,
+	@role,
+	@name,
+	@second_name,
+	@surname,
+	@birth_date,
+	@country,
+	@city,
+	@adress,
+	@postal_code,
+	@phone,
+	@email,
+	@password,
+	@title_of_courtesy,
+	@hire_date
+	)
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd przy dodawaniu nowego pracownika ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+
+```
+
+
+
+23.  Procedura addModuleMembership 
+
+Dodaje moduł do koszyka
 
 ```sql
 CREATE PROCEDURE [dbo].[addModuleMembership] (
@@ -1134,13 +1832,13 @@ CREATE PROCEDURE [dbo].[addModuleMembership] (
 )
 AS
 
-    INSERT INTO modules_memberships (student_id, module_id, paid, initial_fee_paid, discount, pay_deadline, completed)
+    INSERT INTO modules_memberships 
+	(student_id, module_id, paid, initial_fee_paid, discount, pay_deadline, completed)
     VALUES (@studentId, @moduleId, @paid, @initialFeePaid, @discount, @payDeadline, @completed);
 GO
 ```
 
-
-13. Procedura assProductsMembership dodaje produkt do koszyka
+24.  Procedura addProductsMembership dodaje produkt do koszyka
 
 ```sql
 CREATE PROCEDURE addProductsMembership (
@@ -1153,13 +1851,15 @@ CREATE PROCEDURE addProductsMembership (
 )
 AS
 BEGIN
-    INSERT INTO products_membership (student_id, product_id, paid, initial_fee_paid, discount, pay_deadline)
+    INSERT INTO products_membership 
+	(student_id, product_id, paid, initial_fee_paid, discount, pay_deadline)
     VALUES (@studentId, @productId, @paid, @initialFeePaid, @discount, @payDeadline);
 END;
 ```
 
+25. Procedura getOwnedModules 
 
-14. Procedura getOwnedModules zwraca posiadane moduły
+zwraca posiadane moduły
 
 ```sql
 CREATE PROCEDURE [dbo].[getOwnedModules] (
@@ -1173,7 +1873,9 @@ AS
 GO
 ```
 
-15. Procedura getOwnedProducts zwraca posiadane produkty
+26.  Procedura getOwnedProducts 
+
+Zwraca posiadane produkty
 
 ```sql
 CREATE PROCEDURE [dbo].[getOwnedProducts] (
@@ -1187,7 +1889,9 @@ AS
 GO
 ```
 
-16. Procedura getProductsInBasket zwraca produkty w koszyku
+27.   Procedura getProductsInBasket 
+  
+Zwraca produkty w koszyku
 
 ```sql
 CREATE PROCEDURE [dbo].[getProductsInBasket] (
@@ -1201,4 +1905,193 @@ AS
 GO
 ```
 
+28. Procedura assignApprenticeshipToStudies
 
+Przypisuje praktyki do studiów
+
+```sql
+CREATE PROCEDURE [dbo].[assignApprenticeshipToStudies]
+	-- Add the parameters for the stored procedure here
+	@studies_id int,
+	@apprenticeship_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    begin try
+		if not exists(
+		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
+		)
+		begin;
+			throw 52000, N'Dane praktyki nie istnieją', 1
+		end
+
+		if not exists(
+		select * from studies where studies_id = @studies_id
+		)
+		begin;
+			throw 52000, N'Dane studia nie istnieją', 1
+		end
+
+		insert into studies_appreticeships
+		(studies_id, apprenticeship_id)
+		values(@studies_id, @apprenticeship_id)
+	end try
+
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z przypisywaniem studiów do praktyk: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+29. Procedura assignModuleToProduct
+
+Przypisuje moduł do produktu
+
+```sql
+CREATE PROCEDURE [dbo].[assignModuleToProduct]
+	-- Add the parameters for the stored procedure here
+	@module_id int,
+	@product_id int
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+   begin try
+	if not exists(
+	select * from modules where module_id = @module_id
+	)
+	begin;
+		throw 52000, N'Dany moduł nie istnieje', 1
+	end
+
+	if not exists (
+	select * from products where product_id = @product_id
+	)
+	begin;
+		throw 52000, N'Dany produkt nie istnieje', 1
+	end
+
+	insert into products_modules
+	(product_id, module_id)
+	values(@product_id, @module_id)
+   end try
+
+   BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z przypisywaniem modułu do produktu: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+
+```
+
+30. Procedura addDiscountForModule
+
+Przyznaje zniżkę studentowi na moduł
+
+```sql
+CREATE PROCEDURE [dbo].[addDiscountForModule]
+	@student_id int,
+	@module_id int,
+	@discount float
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	begin try
+		if @discount > 1
+		begin;
+			throw 52000, N'Zniżka nie może byc większa niż 100%', 1
+		end
+
+		if not exists(select * from students where student_id = @student_id)
+		begin;
+			throw 52000, N'Nie ma takiego studenta', 1
+		end
+
+		if not exists(select * from modules where module_id = @module_id)
+		begin;
+			throw 52000, N'Nie ma takiego modułu', 1
+		end
+
+		if not exists(select * from modules_memberships 
+		where module_id = @module_id and student_id = @student_id)
+		begin;
+			throw 52000, N'Student nie posiada tego modułu w koszyku', 1
+
+		end
+
+		update modules_memberships
+		set
+		discount = @discount
+		where module_id = @module_id and student_id = @student_id
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z dodawaniem zniżki: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+31. Procedura addDiscountForProduct
+
+Przyznaje zniżkę studentowi na produkt
+
+```sql
+CREATE PROCEDURE [dbo].[addDiscountForProduct]
+	@student_id int,
+	@product_id int,
+	@discount float
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	begin try
+		if @discount > 1
+		begin;
+			throw 52000, N'Zniżka nie może byc większa niż 100%', 1
+		end
+
+		if not exists(select * from students where student_id = @student_id)
+		begin;
+			throw 52000, N'Nie ma takiego studenta', 1
+		end
+
+		if not exists(select * from products where product_id = @product_id)
+		begin;
+			throw 52000, N'Nie ma takiego produktu', 1
+		end
+
+		if not exists(select * from products_memberships 
+		where product_id = @product_id and student_id = @student_id)
+		begin;
+			throw 52000, N'Student nie posiada tego produktu w koszyku', 1
+
+		end
+
+		update products_memberships
+		set
+		discount = @discount
+		where product_id = @product_id and student_id = @student_id
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z dodawaniem zniżki: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
