@@ -1051,5 +1051,147 @@ GO
 ```
 
 
+10 .Procedura getApprenticeshipsForStudies wyświetla wszystkie praktyki dla danych studiów
+
+```sql
+CREATE PROCEDURE [dbo].[getApprenticeshipsForStudies] @studiesId int
+AS
+    SELECT a.*
+    FROM apprenticeships a
+    JOIN studies_apprenticeships sa ON a.apprenticeship_id = sa.apprenticeship_id
+    WHERE sa.studies_id = studiesId;
+GO
+```
+
+11. Procedura addNewStudent dodaje nowego studenta do bazy
+
+```sql
+CREATE PROCEDURE [dbo].[addNewStudent]
+    @name varchar(50),
+    @second_name varchar(50),
+    @surname varchar(50),
+    @birth_date date,
+    @country varchar(50),
+    @city varchar(50),
+    @adress varchar(50),
+    @postal_code varchar(50),
+    @phone varchar(50),
+    @email varchar(50),
+    @password varchar(60)
+AS
+BEGIN
+    INSERT INTO u_tzmuda.dbo.students
+    (
+        name,
+        second_name,
+        surname,
+        birth_date,
+        country,
+        city,
+        adress,
+        postal_code,
+        phone,
+        email,
+        password
+    )
+    VALUES
+    (
+        @name,
+        @second_name,
+        @surname,
+        @birth_date,
+        @country,
+        @city,
+        @adress,
+        @postal_code,
+        @phone,
+        @email,
+        @password
+    );
+END;
+GO
+```
+
+
+12. Procedura addModuleMembership dodaje moduł do koszyka
+
+```sql
+CREATE PROCEDURE [dbo].[addModuleMembership] (
+    @studentId INT,
+    @moduleId INT,
+    @paid BIT,
+    @initialFeePaid BIT,
+    @discount FLOAT,
+    @payDeadline DATETIME,
+    @completed BIT
+)
+AS
+
+    INSERT INTO modules_memberships (student_id, module_id, paid, initial_fee_paid, discount, pay_deadline, completed)
+    VALUES (@studentId, @moduleId, @paid, @initialFeePaid, @discount, @payDeadline, @completed);
+GO
+```
+
+
+13. Procedura assProductsMembership dodaje produkt do koszyka
+
+```sql
+CREATE PROCEDURE addProductsMembership (
+    @studentId INT,
+    @productId INT,
+    @paid BIT,
+    @initialFeePaid BIT,
+    @discount FLOAT,
+    @payDeadline DATETIME
+)
+AS
+BEGIN
+    INSERT INTO products_membership (student_id, product_id, paid, initial_fee_paid, discount, pay_deadline)
+    VALUES (@studentId, @productId, @paid, @initialFeePaid, @discount, @payDeadline);
+END;
+```
+
+
+14. Procedura getOwnedModules zwraca posiadane moduły
+
+```sql
+CREATE PROCEDURE [dbo].[getOwnedModules] (
+    @studentId INT
+)
+AS
+    SELECT *
+    FROM modules_memberships
+    WHERE student_id = @studentId AND paid = 1;
+
+GO
+```
+
+15. Procedura getOwnedProducts zwraca posiadane produkty
+
+```sql
+CREATE PROCEDURE [dbo].[getOwnedProducts] (
+    @studentId INT
+)
+AS
+    SELECT *
+    FROM products_memberships
+    WHERE student_id = @studentId AND paid = 1;
+
+GO
+```
+
+16. Procedura getProductsInBasket zwraca produkty w koszyku
+
+```sql
+CREATE PROCEDURE [dbo].[getProductsInBasket] (
+    @studentId INT
+)
+AS
+    SELECT *
+    FROM products_memberships
+    WHERE student_id = @studentId AND paid = 0;
+
+GO
+```
 
 
