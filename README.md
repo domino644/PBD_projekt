@@ -649,7 +649,395 @@ GO
 ALTER TABLE [dbo].[lecturers] CHECK
 CONSTRAINT [FK_lecturers_employees]
 GO
-
 ```
+
+#Views
+1. Widok showAllModules
+Wyświetla wszystkie moduły z wszystkimi informacjami
+```sql
+CREATE VIEW [dbo].[showAllModules]
+AS
+    SELECT module_id, module_name, type, start_date, end_date, 
+        classroom, lecturer_id, translator_id, students_limit, single_buy_price
+    FROM     dbo.modules
+GO
+```
+
+2. Widok showNotStartedModules
+Wyświetla moduły które jeszcze się nie zaczęły
+```sql
+CREATE VIEW [dbo].[showNotStartedModules]
+AS
+    SELECT module_id, module_name, type, start_date, 
+        end_date, classroom, lecturer_id, translator_id, 
+        students_limit, single_buy_price
+    FROM dbo.modules
+    WHERE  (start_date > GETDATE())
+GO
+```
+
+3. Widok showNotStartedProducts
+Wyświetla produkty które jescze się nie zaczęły
+```sql
+CREATE VIEW [dbo].[showNotStartedProducts]
+AS
+    SELECT product_id, product_name, start_date, end_date, 
+        type, price, initial_fee, supervisor_id, language, 
+        students_limit
+    FROM dbo.products
+WHERE  (start_date > GETDATE())
+GO
+```
+
+#Procedures
+
+1. Procedura changeStudentContactInfo
+Pozwala zmienić wszystkie dane kontaktowe studenta
+```sql
+CREATE PROCEDURE [dbo].[changeStudentContactInfo]
+	@id int,
+	@country varchar(50), 
+	@city varchar(50),
+	@adress varchar(50),
+	@postal_code varchar(50),
+	@phone varchar(50),
+	@email varchar(50)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN
+			UPDATE students
+				SET country = @country, city = @city, 
+                                    adress = @adress, postal_code = @postal_code, 
+                                    phone = @phone, email = @email
+				where student_id = @id
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd aktualizowania danych: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+2. Procedura changeAttendance
+Pozwala zmienić staus obecności studenta na danym module na obecny
+```sql
+CREATE PROCEDURE [dbo].[changeAttendance]
+	@student_id int,
+	@module_id int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN
+			UPDATE attendance
+				set attended = 1
+				where student_id = @student_id and 
+                                    module_id = @module_id
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z wpisywaniem obecności: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+3. Procedura changeEmployeeContactInfo
+Pozwala zmienić danek konraktowe pracowników
+```sql
+CREATE PROCEDURE [dbo].[changeEmployeeContactInfo]
+	@id int,
+	@country varchar(50), 
+	@city varchar(50),
+	@adress varchar(50),
+	@postal_code varchar(50),
+	@phone varchar(50),
+	@email varchar(50)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN
+			UPDATE employees
+				set country = @country, city = @city, 
+                                    adress = @adress, postal_code = @postal_code, 
+                                    phone = @phone, email = @email
+				where employee_id = @id
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd zmiany danych kontaktowych: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+4. Procedura changeExamToPassed
+Pozwala ustawić status zaliczenia danego egzaminu na zaliczony
+```sql
+CREATE PROCEDURE [dbo].[changeExamToPassed]
+	@student_id int,
+	@studies_id int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN
+			UPDATE studies_exam
+				set passed = 1
+				where student_id = @student_id and 
+                                    studies_id = @studies_id
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z zaliczaniem egzaminu: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+5. Procedura changeModulePaidStatus
+Pozwala zmienić status płatności dla modułu i studenta
+```sql
+CREATE PROCEDURE [dbo].[changeModulePaidStatus]
+	@student_id int,
+	@module_id int,
+	@initial_fee_paid_status bit,
+	@normal_price_paid_status bit
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN
+			UPDATE modules_memberships
+				set initial_fee_paid = @initial_fee_paid_status, 
+                                    paid = @normal_price_paid_status
+				where student_id = @student_id and 
+                                    module_id = @module_id
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z wpisywaniem statusu płatności: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+6. Procedura changeProductPaidStatus
+Pozwala zmienić status płatności dla danego produktu i studenta
+```sql
+CREATE PROCEDURE [dbo].[changeProductPaidStatus]
+	@student_id int,
+	@product_id int,
+	@initial_fee_paid_status bit,
+	@normal_price_paid_status bit
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		BEGIN
+			UPDATE products_memberships
+				set initial_fee_paid = @initial_fee_paid_status, 
+                                    paid = @normal_price_paid_status
+				where student_id = @student_id and 
+                                    product_id = @product_id
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z wpisywaniem statusu płatności: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+7. Procedura createWebinar
+Pozwala stworzyć nowy webinar
+```sql
+CREATE PROCEDURE [dbo].[createWebinar]
+@product_name varchar(50),
+@start_date datetime,
+@end_date datetime,
+@price float,
+@initial_fee float,
+@supervisor_id int,
+@language varchar(50),
+@students_limit int,
+@link varchar(100)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		IF @start_date > @end_date
+			BEGIN
+			;
+			THROW 52000, N'Daty nie mają sensu', 1
+			END
+
+		IF not exists(
+				select * 
+                from lecturers 
+                where lecturer_id = @supervisor_id
+			)
+			BEGIN
+			;
+			THROW 52000, N'Wykłądowca nie istnieje', 1
+			END
+
+		DECLARE @product_id INT
+		SELECT @product_id = ISNULL(MAX(product_id), 0) + 1
+		from products
+
+		DECLARE @type varchar(50)
+		SELECT @type = 'webinar'
+
+		INSERT INTO [dbo].[products]
+				([product_id]
+				,[product_name]
+				,[start_date]
+				,[end_date]
+				,[type]
+				,[price]
+				,[initial_fee]
+				,[supervisor_id]
+				,[language]
+				,[students_limit])
+			VALUES
+				(@product_id
+				,@product_name
+				,@start_date
+				,@end_date
+				,@type
+				,@price
+				,@initial_fee
+				,@supervisor_id
+				,@language
+				,@students_limit)
+
+		INSERT INTO [dbo].[webinars]
+				([webinar_id]
+				,[link])
+			 VALUES
+				(@product_id
+				,@link)
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z dodawaniem nowego webinaru: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+8. Procedura deleteWebinar
+Pozwala usunąć webinar
+```sql
+CREATE PROCEDURE [dbo].[deleteWebinar] 
+	@webinar_id int
+AS
+BEGIN
+	SET NOCOUNT ON;
+    BEGIN TRY
+	if not exists(
+	select * from products where product_id = @webinar_id)
+	BEGIN
+			;
+			THROW 52000, N'Webinar nie istnieje', 1
+			END
+	delete from products where product_id = @webinar_id
+	delete from webinars where webinar_id = @webinar_id
+END TRY
+begin catch
+	DECLARE @msg nvarchar(2048)
+			=N'Błąd z usuwaniem webinaru: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+9. Procedura editWebinar
+pozwala zmienić informacje o webinarze
+```sql
+CREATE PROCEDURE [dbo].[editWebinar]
+	@webinar_id int,
+	@new_product_name varchar(50),
+	@new_start_date datetime,
+	@new_end_date datetime,
+	@new_price float,
+	@new_initial_fee float,
+	@new_supervisor_id int,
+	@new_language varchar(50),
+	@new_students_limit int,
+	@new_link varchar(100)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+   begin try
+
+   if @new_start_date > @new_end_date
+   begin;
+	throw 52000, N'Daty nie mają sensu', 1
+   end
+
+   if not exists(
+	select * from products where product_id=@webinar_id
+   )
+   BEGIN
+			;
+			THROW 52000, N'Webinar nie istnieje', 1
+	END
+
+	if not exists(
+		select * from lecturers where lecturer_id=@new_supervisor_id
+	)		
+			begin;
+			throw 52000, N'Wykładowca nie istnieje', 1
+			end
+
+
+	update products
+	set 
+	product_name = @new_product_name, 
+	start_date = @new_start_date, 
+	end_date = @new_end_date, 
+	type='webinar', 
+	price=@new_price, 
+	initial_fee = @new_initial_fee, 
+	supervisor_id = @new_supervisor_id, 
+	language = @new_language,
+	students_limit = @new_students_limit
+	where product_id = @webinar_id
+
+	update webinars
+	set link = @new_link
+	where webinar_id = @webinar_id
+	end try
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z aktualizowaniem webianru: ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+GO
+```
+
+
 
 
