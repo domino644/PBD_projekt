@@ -869,15 +869,15 @@ GO
 Pozwala stworzyć nowy webinar
 ```sql
 CREATE PROCEDURE [dbo].[createWebinar]
-@product_name varchar(50),
-@start_date datetime,
-@end_date datetime,
-@price float,
-@initial_fee float,
-@supervisor_id int,
-@language varchar(50),
-@students_limit int,
-@link varchar(100)
+	@product_name varchar(50),
+	@start_date datetime,
+	@end_date datetime,
+	@price float,
+	@initial_fee float,
+	@supervisor_id int,
+	@language varchar(50),
+	@students_limit int,
+	@link varchar(100)
 AS
 BEGIN
 	SET NOCOUNT ON;
