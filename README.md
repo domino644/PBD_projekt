@@ -689,6 +689,18 @@ WHERE  (start_date > GETDATE())
 GO
 ```
 
+4.Procedura getApprenticeshipsForStudies wyświetla wszystkie praktyki dla danych studiów
+
+```sql
+CREATE PROCEDURE [dbo].[getApprenticeshipsForStudies] @studiesId int
+AS
+    SELECT a.*
+    FROM apprenticeships a
+    JOIN studies_apprenticeships sa ON a.apprenticeship_id = sa.apprenticeship_id
+    WHERE sa.studies_id = studiesId;
+GO
+```
+
 #Procedures
 
 1. Procedura changeStudentContactInfo
