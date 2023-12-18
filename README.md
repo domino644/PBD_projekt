@@ -688,16 +688,23 @@ AS
 WHERE  (start_date > GETDATE())
 GO
 ```
-
-4.Procedura getApprenticeshipsForStudies wyświetla wszystkie praktyki dla danych studiów
+4. Widok wyświetla wszystkie webinaria
 
 ```sql
-CREATE PROCEDURE [dbo].[getApprenticeshipsForStudies] @studiesId int
-AS
-    SELECT a.*
-    FROM apprenticeships a
-    JOIN studies_apprenticeships sa ON a.apprenticeship_id = sa.apprenticeship_id
-    WHERE sa.studies_id = studiesId;
+create view [dbo].[showAllWebinars] as
+select product_name
+from products
+where type = 'webinar'
+GO
+```
+
+5. Widok wyświetla wszyste dostępne produkty
+
+```sql
+create view [dbo].[showAllCourses] as
+select product_name
+from products
+where type = 'course'
 GO
 ```
 
