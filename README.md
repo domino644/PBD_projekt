@@ -729,7 +729,8 @@ CREATE VIEW [dbo].[showAllStudentsWithModuleDebt]
 AS
 SELECT DISTINCT s.name, s.surname
 FROM            dbo.modules_memberships AS mm INNER JOIN
-                         dbo.students AS s ON mm.student_id = s.student_id AND mm.paid = 0
+                         dbo.students AS s ON mm.student_id = s.student_id 
+						 AND mm.paid = 0
 GO
 
 ```
@@ -743,7 +744,8 @@ CREATE VIEW [dbo].[showAllStudentsWithProductDebt]
 AS
 SELECT DISTINCT s.name, s.surname
 FROM            dbo.products_memberships AS pm INNER JOIN
-                         dbo.students AS s ON pm.student_id = s.student_id AND pm.paid = 0
+                         dbo.students AS s ON pm.student_id = s.student_id 
+						 AND pm.paid = 0
 GO
 ```
 
@@ -1220,7 +1222,7 @@ GO
 ```
 
 
-111. Procedura deleteWebinar
+11. Procedura deleteWebinar
    
 Usuwa webinar
 
@@ -1834,7 +1836,8 @@ AS
 
     INSERT INTO modules_memberships 
 	(student_id, module_id, paid, initial_fee_paid, discount, pay_deadline, completed)
-    VALUES (@studentId, @moduleId, @paid, @initialFeePaid, @discount, @payDeadline, @completed);
+    VALUES 
+	(@studentId, @moduleId, @paid, @initialFeePaid, @discount, @payDeadline, @completed);
 GO
 ```
 
