@@ -81,9 +81,11 @@ Ogólne informacje o studentach: imię, nazwisko, adres, numer telefonu, adres m
 - email - adres email studenta
 - password - hasło studenta
 
+<div style="page-break-after: always;"></div>
+
 ```sql
 CREATE TABLE [dbo].[students](
-	[student_id] [int] NOT NULL,
+	[student_id] [int] IDENTITY(1,1) NOT NULL,
 	[name] [varchar](50) NOT NULL,
 	[second_name] [varchar](50) NULL,
 	[surname] [varchar](50) NOT NULL,
@@ -95,11 +97,27 @@ CREATE TABLE [dbo].[students](
 	[phone] [varchar](50) NOT NULL,
 	[email] [varchar](50) NOT NULL,
 	[password] [varchar](60) NOT NULL,
- CONSTRAINT [PK_students] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_students] PRIMARY KEY CLUSTERED 
 (
 	[student_id] ASC
 )
 ) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[students]  WITH CHECK ADD  CONSTRAINT 
+	[validBirthdate0] CHECK  ((datepart(year,[birth_date])>(1900) AND 
+	datepart(year,[birth_date])<datepart(year,sysdatetime())))
+GO
+
+ALTER TABLE [dbo].[students] CHECK CONSTRAINT [validBirthdate0]
+GO
+
+ALTER TABLE [dbo].[students]  WITH CHECK ADD CONSTRAINT 
+	[validEmail] CHECK  (([email] like '%@%'))
+GO
+
+ALTER TABLE [dbo].[students] CHECK CONSTRAINT [validEmail]
+GO
 ```
 
 <div style="page-break-after: always;"></div>
@@ -124,9 +142,11 @@ Ogólne informacje o pracownikach: imię, nazwisko, tytuł, rola w firmie, numer
 - title_of_courtesy - tytuł pracownika
 - hire_date - data zatrudnienia pracownika
 
+<div style="page-break-after: always;"></div>
+
 ```sql
 CREATE TABLE [dbo].[employees](
-	[employee_id] [int] NOT NULL,
+	[employee_id] [int] IDENTITY(1,1) NOT NULL,
 	[role] [varchar](50) NOT NULL,
 	[name] [varchar](50) NOT NULL,
 	[second_name] [varchar](50) NULL,
@@ -135,17 +155,32 @@ CREATE TABLE [dbo].[employees](
 	[country] [varchar](50) NOT NULL,
 	[city] [varchar](50) NOT NULL,
 	[adress] [varchar](50) NOT NULL,
-	[postal_code] [varchar](50) NOT NULL,
+	[postal_code] [varchar](50) NULL,
 	[phone] [varchar](50) NOT NULL,
 	[email] [varchar](50) NOT NULL,
-	[password] [varchar](50) NOT NULL,
+	[password] [varchar](60) NOT NULL,
 	[title_of_courtesy] [varchar](10) NOT NULL,
 	[hire_date] [date] NOT NULL,
- CONSTRAINT [PK_employees] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_employees] PRIMARY KEY CLUSTERED 
 (
 	[employee_id] ASC
 )
 ) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[employees]  WITH CHECK ADD  CONSTRAINT
+	[employeesValidBirthDate] CHECK  ((datepart(year,[birth_date])>(1899) AND 
+	datepart(year,[birth_date])<datepart(year,getdate())))
+GO
+
+ALTER TABLE [dbo].[employees] CHECK CONSTRAINT [employeesValidBirthDate]
+GO
+
+ALTER TABLE [dbo].[employees]  WITH CHECK ADD  CONSTRAINT [employeesValidEmail] CHECK  (([email] like '%@%'))
+GO
+
+ALTER TABLE [dbo].[employees] CHECK CONSTRAINT [employeesValidEmail]
+GO
 ```
 
 <div style="page-break-after: always;"></div>
@@ -166,9 +201,11 @@ Typ produktu, nazwa produktu, data rozpoczęcia i zakończenia, cena, zaliczka, 
 - language - język w którym produkt jest prowadzony
 - students_limit - limit studentów na kursie, o ile istnieje
 
+<div style="page-break-after: always;"></div>
+
 ```sql
 CREATE TABLE [dbo].[products](
-	[product_id] [int] NOT NULL,
+	[product_id] [int] IDENTITY(1,1) NOT NULL,
 	[product_name] [varchar](50) NOT NULL,
 	[start_date] [datetime] NOT NULL,
 	[end_date] [datetime] NOT NULL,
@@ -178,20 +215,40 @@ CREATE TABLE [dbo].[products](
 	[supervisor_id] [int] NOT NULL,
 	[language] [varchar](50) NOT NULL,
 	[students_limit] [int] NULL,
- CONSTRAINT [PK_products] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_products] PRIMARY KEY CLUSTERED 
 (
 	[product_id] ASC
 )
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[products]  WITH CHECK ADD
-CONSTRAINT [FK_products_lecturers] FOREIGN KEY([supervisor_id])
+ALTER TABLE [dbo].[products]  WITH CHECK ADD  CONSTRAINT 
+	[FK_products_lecturers] FOREIGN KEY([supervisor_id])
 REFERENCES [dbo].[lecturers] ([lecturer_id])
 GO
 
-ALTER TABLE [dbo].[products] CHECK
-CONSTRAINT [FK_products_lecturers]
+ALTER TABLE [dbo].[products] CHECK CONSTRAINT [FK_products_lecturers]
+GO
+
+ALTER TABLE [dbo].[products]  WITH CHECK ADD  CONSTRAINT 
+	[productsValidDuration] CHECK  (([start_date]<=[end_date]))
+GO
+
+ALTER TABLE [dbo].[products] CHECK CONSTRAINT [productsValidDuration]
+GO
+
+ALTER TABLE [dbo].[products]  WITH CHECK ADD  CONSTRAINT 
+	[validInitialFee] CHECK  (([initial_fee]>=(0)))
+GO
+
+ALTER TABLE [dbo].[products] CHECK CONSTRAINT [validInitialFee]
+GO
+
+ALTER TABLE [dbo].[products]  WITH CHECK ADD  CONSTRAINT 
+	[validPrice] CHECK  (([price]>=(0)))
+GO
+
+ALTER TABLE [dbo].[products] CHECK CONSTRAINT [validPrice]
 GO
 ```
 
@@ -213,9 +270,11 @@ Jako moduł traktowana jest każda jednostka taka jak wykład, ćwiczenia, dzie�
 - students_limit - limit studentów na module, o ile istnieje
 - single_buy_price - cena zakupu pojedynczego modułu
 
+<div style="page-break-after: always;"></div>
+
 ```sql
 CREATE TABLE [dbo].[modules](
-	[module_id] [int] NOT NULL,
+	[module_id] [int] IDENTITY(1,1) NOT NULL,
 	[module_name] [varchar](50) NOT NULL,
 	[type] [varchar](50) NOT NULL,
 	[start_date] [datetime] NOT NULL,
@@ -225,29 +284,41 @@ CREATE TABLE [dbo].[modules](
 	[translator_id] [int] NULL,
 	[students_limit] [int] NULL,
 	[single_buy_price] [float] NOT NULL,
- CONSTRAINT [PK_modules_1] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_modules_1] PRIMARY KEY CLUSTERED 
 (
 	[module_id] ASC
 )
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[modules]  WITH CHECK ADD
-CONSTRAINT [FK_modules_lecturers] FOREIGN KEY([lecturer_id])
+ALTER TABLE [dbo].[modules]  WITH CHECK ADD  CONSTRAINT 
+	[FK_modules_lecturers] FOREIGN KEY([lecturer_id])
 REFERENCES [dbo].[lecturers] ([lecturer_id])
 GO
 
-ALTER TABLE [dbo].[modules] CHECK
-CONSTRAINT [FK_modules_lecturers]
+ALTER TABLE [dbo].[modules] CHECK CONSTRAINT [FK_modules_lecturers]
 GO
 
-ALTER TABLE [dbo].[modules]  WITH CHECK ADD
-CONSTRAINT [FK_modules_translators] FOREIGN KEY([translator_id])
+ALTER TABLE [dbo].[modules]  WITH CHECK ADD  CONSTRAINT 
+	[FK_modules_translators] FOREIGN KEY([translator_id])
 REFERENCES [dbo].[translators] ([translator_id])
 GO
 
-ALTER TABLE [dbo].[modules] CHECK
-CONSTRAINT [FK_modules_translators]
+ALTER TABLE [dbo].[modules] CHECK CONSTRAINT [FK_modules_translators]
+GO
+
+ALTER TABLE [dbo].[modules]  WITH CHECK ADD  CONSTRAINT 
+	[modulesValidDuration] CHECK  (([start_date]<=[end_date]))
+GO
+
+ALTER TABLE [dbo].[modules] CHECK CONSTRAINT [modulesValidDuration]
+GO
+
+ALTER TABLE [dbo].[modules]  WITH CHECK ADD  CONSTRAINT 
+	[validSingleBuyPrice] CHECK  (([single_buy_price]>=(0)))
+GO
+
+ALTER TABLE [dbo].[modules] CHECK CONSTRAINT [validSingleBuyPrice]
 GO
 ```
 
@@ -272,22 +343,20 @@ CREATE TABLE [dbo].[products_modules](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD
-CONSTRAINT [FK_products_modules_modules] FOREIGN KEY([module_id])
+ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD CONSTRAINT 
+	[FK_products_modules_modules] FOREIGN KEY([module_id])
 REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[products_modules] CHECK
-CONSTRAINT [FK_products_modules_modules]
+ALTER TABLE [dbo].[products_modules] CHECK CONSTRAINT [FK_products_modules_modules]
 GO
 
-ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD
-CONSTRAINT [FK_products_modules_products] FOREIGN KEY([product_id])
+ALTER TABLE [dbo].[products_modules]  WITH CHECK ADD CONSTRAINT 
+	[FK_products_modules_products] FOREIGN KEY([product_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[products_modules] CHECK
-CONSTRAINT [FK_products_modules_products]
+ALTER TABLE [dbo].[products_modules] CHECK CONSTRAINT [FK_products_modules_products]
 GO
 ```
 
@@ -311,22 +380,20 @@ CREATE TABLE [dbo].[courses](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[courses]  WITH CHECK ADD
-CONSTRAINT [FK_courses_course_types] FOREIGN KEY([type_id])
+ALTER TABLE [dbo].[courses]  WITH CHECK ADD CONSTRAINT 
+	[FK_courses_course_types] FOREIGN KEY([type_id])
 REFERENCES [dbo].[course_types] ([type_id])
 GO
 
-ALTER TABLE [dbo].[courses] CHECK
-CONSTRAINT [FK_courses_course_types]
+ALTER TABLE [dbo].[courses] CHECK CONSTRAINT [FK_courses_course_types]
 GO
 
-ALTER TABLE [dbo].[courses]  WITH CHECK ADD
-CONSTRAINT [FK_courses_products] FOREIGN KEY([course_id])
+ALTER TABLE [dbo].[courses]  WITH CHECK ADD CONSTRAINT 
+	[FK_courses_products] FOREIGN KEY([course_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[courses] CHECK
-CONSTRAINT [FK_courses_products]
+ALTER TABLE [dbo].[courses] CHECK CONSTRAINT [FK_courses_products]
 GO
 ```
 
@@ -350,13 +417,12 @@ CREATE TABLE [dbo].[webinars](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[webinars]  WITH CHECK ADD
-CONSTRAINT [FK_webinars_products] FOREIGN KEY([webinar_id])
+ALTER TABLE [dbo].[webinars]  WITH CHECK ADD CONSTRAINT 
+	[FK_webinars_products] FOREIGN KEY([webinar_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[webinars] CHECK
-CONSTRAINT [FK_webinars_products]
+ALTER TABLE [dbo].[webinars] CHECK CONSTRAINT [FK_webinars_products]
 GO
 ```
 
@@ -380,13 +446,12 @@ CREATE TABLE [dbo].[studies](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[studies]  WITH CHECK ADD
-CONSTRAINT [FK_studies_products] FOREIGN KEY([studies_id])
+ALTER TABLE [dbo].[studies]  WITH CHECK ADD CONSTRAINT 
+	[FK_studies_products] FOREIGN KEY([studies_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[studies] CHECK
-CONSTRAINT [FK_studies_products]
+ALTER TABLE [dbo].[studies] CHECK CONSTRAINT [FK_studies_products]
 GO
 ```
 
@@ -403,15 +468,22 @@ Informację o praktykach: nazwa, data rozpoczęcia i zakończenia
 
 ```sql
 CREATE TABLE [dbo].[apprenticeships](
-	[apprenticeship_id] [int] NOT NULL,
+	[apprenticeship_id] [int] IDENTITY(1,1) NOT NULL,
 	[apprenticeship_name] [varchar](50) NULL,
 	[start_date] [datetime] NULL,
 	[end_date] [datetime] NULL,
- CONSTRAINT [PK_apprenticeships] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_apprenticeships] PRIMARY KEY CLUSTERED 
 (
 	[apprenticeship_id] ASC
 )
 ) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[apprenticeships]  WITH CHECK ADD  CONSTRAINT 
+	[apprenticeshipsValidDuration] CHECK  (([start_date]<=[end_date]))
+GO
+
+ALTER TABLE [dbo].[apprenticeships] CHECK CONSTRAINT [apprenticeshipsValidDuration]
 GO
 ```
 
@@ -436,22 +508,20 @@ CREATE TABLE [dbo].[studies_appreticeships](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD
-CONSTRAINT [FK_studies_appreticeships_apprenticeships] FOREIGN KEY([apprenticeship_id])
+ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD CONSTRAINT 
+	[FK_studies_appreticeships_apprenticeships] FOREIGN KEY([apprenticeship_id])
 REFERENCES [dbo].[apprenticeships] ([apprenticeship_id])
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships] CHECK
-CONSTRAINT [FK_studies_appreticeships_apprenticeships]
+ALTER TABLE [dbo].[studies_appreticeships] CHECK CONSTRAINT [FK_studies_appreticeships_apprenticeships]
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD
-CONSTRAINT [FK_studies_appreticeships_studies] FOREIGN KEY([studies_id])
+ALTER TABLE [dbo].[studies_appreticeships]  WITH CHECK ADD CONSTRAINT 
+	[FK_studies_appreticeships_studies] FOREIGN KEY([studies_id])
 REFERENCES [dbo].[studies] ([studies_id])
 GO
 
-ALTER TABLE [dbo].[studies_appreticeships] CHECK
-CONSTRAINT [FK_studies_appreticeships_studies]
+ALTER TABLE [dbo].[studies_appreticeships] CHECK CONSTRAINT [FK_studies_appreticeships_studies]
 GO
 ```
 
@@ -459,48 +529,37 @@ GO
 
 11. Tabela “modules_memberships”
 
-Tabela służąca do przechowywania modułów posiadanych przez studentów, w tym tych jeszcze nie opłaconych
+Tabela służąca do przechowywania modułów posiadanych przez studentów
 
 - student_id - numer id studenta do którego należy moduł (PK)
 - module_id - numer id modułu (PK)
-- paid - informacja czy opłata za moduł została wpłacona
-- initial_fee_paid - informacja czy zaliczka za moduł została wpłacona
-- discount - zniżka
-- pay_deadline - data do której trzeba wpłacić opłatę za moduł
-- completed - informacja czy moduł został zaliczony
 
 ```sql
 CREATE TABLE [dbo].[modules_memberships](
 	[student_id] [int] NOT NULL,
 	[module_id] [int] NOT NULL,
-	[paid] [bit] NOT NULL,
-	[initial_fee_paid] [bit] NOT NULL,
-	[discount] [float] NOT NULL,
-	[pay_deadline] [datetime] NOT NULL,
-	[completed] [bit] NOT NULL,
- CONSTRAINT [PK_shopping_cart_1] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_shopping_cart_1] PRIMARY KEY CLUSTERED 
 (
 	[student_id] ASC,
 	[module_id] ASC
-)) ON [PRIMARY]
+)
+) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[modules_memberships]  WITH CHECK ADD
-CONSTRAINT [FK_modules_memberships_modules] FOREIGN KEY([module_id])
+ALTER TABLE [dbo].[modules_memberships]  WITH CHECK ADD  CONSTRAINT 
+	[FK_modules_memberships_modules] FOREIGN KEY([module_id])
 REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[modules_memberships] CHECK
-CONSTRAINT [FK_modules_memberships_modules]
+ALTER TABLE [dbo].[modules_memberships] CHECK CONSTRAINT [FK_modules_memberships_modules]
 GO
 
-ALTER TABLE [dbo].[modules_memberships]  WITH CHECK ADD
-CONSTRAINT [FK_shopping_cart_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[modules_memberships]  WITH CHECK ADD  CONSTRAINT 
+	[FK_shopping_cart_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[modules_memberships] CHECK
-CONSTRAINT [FK_shopping_cart_students]
+ALTER TABLE [dbo].[modules_memberships] CHECK CONSTRAINT [FK_shopping_cart_students]
 GO
 ```
 
@@ -527,22 +586,20 @@ CREATE TABLE [dbo].[attendance](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[attendance]  WITH CHECK ADD
-CONSTRAINT [FK_attendance_modules] FOREIGN KEY([module_id])
+ALTER TABLE [dbo].[attendance]  WITH CHECK ADD CONSTRAINT 
+	[FK_attendance_modules] FOREIGN KEY([module_id])
 REFERENCES [dbo].[modules] ([module_id])
 GO
 
-ALTER TABLE [dbo].[attendance] CHECK
-CONSTRAINT [FK_attendance_modules]
+ALTER TABLE [dbo].[attendance] CHECK CONSTRAINT [FK_attendance_modules]
 GO
 
-ALTER TABLE [dbo].[attendance]  WITH CHECK ADD
-CONSTRAINT [FK_attendance_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[attendance]  WITH CHECK ADD CONSTRAINT 
+	[FK_attendance_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[attendance] CHECK
-CONSTRAINT [FK_attendance_students]
+ALTER TABLE [dbo].[attendance] CHECK CONSTRAINT [FK_attendance_students]
 GO
 
 ```
@@ -551,46 +608,37 @@ GO
 
 13. Tabela “products_memberships”
 
-Tabela służąca do przechowywania produktów posiadanych przez studentów, w tym tych jeszcze nie opłaconych
+Tabela służąca do przechowywania produktów posiadanych przez studentów
 
 - student_id - numer id studenta do którego należy moduł (PK)
 - product_id - numer id produktu (PK)
-- paid - informacja czy opłata za produkt została wpłacona
-- initial_fee_paid - informacja czy zaliczka za produkt została wpłacona
-- discount - zniżka
-- pay_deadline - data do której trzeba wpłacić opłatę za produkt
 
 ```sql
 CREATE TABLE [dbo].[products_memberships](
 	[student_id] [int] NOT NULL,
 	[product_id] [int] NOT NULL,
-	[paid] [bit] NOT NULL,
-	[initial_fee_paid] [bit] NOT NULL,
-	[discount] [float] NOT NULL,
-	[pay_deadline] [datetime] NOT NULL,
- CONSTRAINT [PK_memberships_1] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_memberships_1] PRIMARY KEY CLUSTERED 
 (
 	[student_id] ASC,
 	[product_id] ASC
-)) ON [PRIMARY]
+)
+) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[products_memberships]  WITH CHECK ADD
-CONSTRAINT [FK_memberships_students] FOREIGN KEY([student_id])
+ALTER TABLE [dbo].[products_memberships]  WITH CHECK ADD  CONSTRAINT 
+	[FK_memberships_students] FOREIGN KEY([student_id])
 REFERENCES [dbo].[students] ([student_id])
 GO
 
-ALTER TABLE [dbo].[products_memberships] CHECK
-CONSTRAINT [FK_memberships_students]
+ALTER TABLE [dbo].[products_memberships] CHECK CONSTRAINT [FK_memberships_students]
 GO
 
-ALTER TABLE [dbo].[products_memberships]  WITH CHECK ADD
-CONSTRAINT [FK_products_memberships_products] FOREIGN KEY([product_id])
+ALTER TABLE [dbo].[products_memberships]  WITH CHECK ADD  CONSTRAINT 
+	[FK_products_memberships_products] FOREIGN KEY([product_id])
 REFERENCES [dbo].[products] ([product_id])
 GO
 
-ALTER TABLE [dbo].[products_memberships] CHECK
-CONSTRAINT [FK_products_memberships_products]
+ALTER TABLE [dbo].[products_memberships] CHECK CONSTRAINT [FK_products_memberships_products]
 GO
 ```
 
@@ -612,13 +660,12 @@ CREATE TABLE [dbo].[translators](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[translators]  WITH CHECK ADD
-CONSTRAINT [FK_translators_employees] FOREIGN KEY([translator_id])
+ALTER TABLE [dbo].[translators]  WITH CHECK ADD CONSTRAINT 
+	[FK_translators_employees] FOREIGN KEY([translator_id])
 REFERENCES [dbo].[employees] ([employee_id])
 GO
 
-ALTER TABLE [dbo].[translators] CHECK
-CONSTRAINT [FK_translators_employees]
+ALTER TABLE [dbo].[translators] CHECK CONSTRAINT [FK_translators_employees]
 GO
 
 ```
@@ -641,32 +688,119 @@ CREATE TABLE [dbo].[lecturers](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[lecturers]  WITH CHECK ADD
-CONSTRAINT [FK_lecturers_employees] FOREIGN KEY([lecturer_id])
+ALTER TABLE [dbo].[lecturers]  WITH CHECK ADD CONSTRAINT 
+	[FK_lecturers_employees] FOREIGN KEY([lecturer_id])
 REFERENCES [dbo].[employees] ([employee_id])
 GO
 
-ALTER TABLE [dbo].[lecturers] CHECK
-CONSTRAINT [FK_lecturers_employees]
+ALTER TABLE [dbo].[lecturers] CHECK CONSTRAINT [FK_lecturers_employees]
 GO
 ```
+
+<div style="page-break-after: always;"></div>
+
+16. Tabela modules_orders
+
+Tabela przechowująca informacje o płatnościach za moduły, przechowująca także moduły w koszyku jeszcze nieopłacone
+
+- student_id - numer id studenta (PK)
+- module_id - numer id modułu (PK)
+- order_date - data dodania modułu do koszyka
+- discount - przyznana przecena
+- initial_fee_paid - informacja o tym czy zaliczka została wpłacona
+- paid - informacja o tym czy cała opłata za moduł została wpłacona
+- payment_link - link do płatności
+- pay_deadline - data do której trzeba wpłacić całą opłatę
+
+```sql
+CREATE TABLE [dbo].[modules_orders](
+	[student_id] [int] NOT NULL,
+	[module_id] [int] NOT NULL,
+	[order_date] [datetime] NOT NULL,
+	[discount] [float] NOT NULL,
+	[initial_fee_paid] [bit] NOT NULL,
+	[paid] [bit] NOT NULL,
+	[payment_link] [varchar](255) NOT NULL,
+	[pay_deadline] [datetime] NOT NULL,
+ CONSTRAINT [PK_modules_orders] PRIMARY KEY CLUSTERED 
+(
+	[student_id] ASC,
+	[module_id] ASC
+)
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[modules_orders]  WITH CHECK ADD  CONSTRAINT 
+	[FK_modules_orders_modules] FOREIGN KEY([module_id])
+REFERENCES [dbo].[modules] ([module_id])
+GO
+
+ALTER TABLE [dbo].[modules_orders] CHECK CONSTRAINT [FK_modules_orders_modules]
+GO
+
+ALTER TABLE [dbo].[modules_orders]  WITH CHECK ADD  CONSTRAINT 
+	[FK_modules_orders_students] FOREIGN KEY([student_id])
+REFERENCES [dbo].[students] ([student_id])
+GO
+
+ALTER TABLE [dbo].[modules_orders] CHECK CONSTRAINT [FK_modules_orders_students]
+GO
+```
+<div style="page-break-after: always;"></div>
+
+17. Tabela products_orders
+
+Tabela przechowująca informacje o płatnościach za produkty, przechowująca także moduły w koszyku jeszcze nieopłacone
+
+- student_id - numer id studenta (PK)
+- produkt_id - numer id produktu (PK)
+- order_date - data dodania produktu do koszyka
+- discount - przyznana przecena
+- initial_fee_paid - informacja o tym czy zaliczka została wpłacona
+- paid - informacja o tym czy cała opłata za moduł została wpłacona
+- payment_link - link do płatności
+- pay_deadline - data do której trzeba wpłacić całą opłatę
+
+```sql
+CREATE TABLE [dbo].[products_orders](
+	[student_id] [int] NOT NULL,
+	[product_id] [int] NOT NULL,
+	[order_date] [datetime] NOT NULL,
+	[discount] [float] NOT NULL,
+	[initial_fee_paid] [bit] NOT NULL,
+	[paid] [bit] NOT NULL,
+	[payment_link] [varchar](255) NOT NULL,
+	[pay_deadline] [datetime] NOT NULL,
+ CONSTRAINT [PK_products_orders] PRIMARY KEY CLUSTERED 
+(
+	[student_id] ASC,
+	[product_id] ASC
+)
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[products_orders]  WITH CHECK ADD  CONSTRAINT 
+	[FK_products_orders_products] FOREIGN KEY([product_id])
+REFERENCES [dbo].[products] ([product_id])
+GO
+
+ALTER TABLE [dbo].[products_orders] CHECK CONSTRAINT [FK_products_orders_products]
+GO
+
+ALTER TABLE [dbo].[products_orders]  WITH CHECK ADD  CONSTRAINT 
+	[FK_products_orders_students] FOREIGN KEY([student_id])
+REFERENCES [dbo].[students] ([student_id])
+GO
+
+ALTER TABLE [dbo].[products_orders] CHECK CONSTRAINT [FK_products_orders_students]
+GO
+```
+
+<div style="page-break-after: always;"></div>
 
 # Widoki
 
-1. Widok showAllModules
-   
-Wyświetla wszystkie moduły z wszystkimi informacjami
-
-```sql
-CREATE VIEW [dbo].[showAllModules]
-AS
-    SELECT module_id, module_name, type, start_date, end_date,
-        classroom, lecturer_id, translator_id, students_limit, single_buy_price
-    FROM     dbo.modules
-GO
-```
-
-2. Widok showNotStartedModules
+1. Widok showNotStartedModules
 
 Wyświetla moduły które jeszcze się nie zaczęły
 
@@ -681,7 +815,9 @@ AS
 GO
 ```
 
-3. Widok showNotStartedProducts
+<div style="page-break-after: always;"></div>
+
+2. Widok showNotStartedProducts
 
 Wyświetla produkty które jescze się nie zaczęły
 
@@ -692,62 +828,43 @@ AS
         type, price, initial_fee, supervisor_id, language,
         students_limit
     FROM dbo.products
-WHERE  (start_date > GETDATE())
+	WHERE  (start_date > GETDATE())
 GO
 ```
 
-4. Widok showAllWebinars
+<div style="page-break-after: always;"></div>
 
-Wyświetla wszystkie webinaria
-
-```sql
-create view [dbo].[showAllWebinars] as
-select product_name
-from products
-where type = 'webinar'
-GO
-```
-
-5. Widok showAllCourses
-
-Wyświetla wszyste dostępne produkty
-
-```sql
-create view [dbo].[showAllCourses] as
-select product_name
-from products
-where type = 'course'
-GO
-```
-
-6. Widok showAllStudentsWithModuleDebt
+3. Widok showAllStudentsWithModuleDebt
 
 Wyświetla wszystkich studentów, którzy zalegają z opłatami za moduły
 
 ```sql
-CREATE VIEW [dbo].[showAllStudentsWithModuleDebt]
-AS
-SELECT DISTINCT s.name, s.surname
-FROM            dbo.modules_memberships AS mm INNER JOIN
-                         dbo.students AS s ON mm.student_id = s.student_id 
-						 AND mm.paid = 0
+CREATE view [dbo].[showAllStudentsWithModuleDebt] AS
+	SELECT s.student_id, s.name, s.surname
+	FROM dbo.modules_orders AS mo 
+	INNER JOIN dbo.students AS s 
+	ON mo.student_id = s.student_id AND mo.paid = 0
+	GROUP BY s.student_id, s.name, s.surname
 GO
-
 ```
 
-7. Widok showAllStudentsWithProductDebt
+<div style="page-break-after: always;"></div>
+
+4. Widok showAllStudentsWithProductDebt
 
 Wyświetla wszystkich studentów, którzy zalegają z opłatami za produkty
 
 ```sql
-CREATE VIEW [dbo].[showAllStudentsWithProductDebt]
-AS
-SELECT DISTINCT s.name, s.surname
-FROM            dbo.products_memberships AS pm INNER JOIN
-                         dbo.students AS s ON pm.student_id = s.student_id 
-						 AND pm.paid = 0
+CREATE view [dbo].[showAllStudentsWithModuleDebt] AS
+	SELECT s.student_id, s.name, s.surname
+	FROM dbo.modules_orders AS mo 
+	INNER JOIN dbo.students AS s 
+	ON mo.student_id = s.student_id AND mo.paid = 0
+	GROUP BY s.student_id, s.name, s.surname
 GO
 ```
+
+<div style="page-break-after: always;"></div>
 
 # Procedures
 
@@ -785,6 +902,8 @@ END
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 2. Procedura changeAttendance
    
 Zmienia status obecności studenta na danym module na obecny
@@ -812,6 +931,8 @@ BEGIN
 END
 GO
 ```
+
+<div style="page-break-after: always;"></div>
 
 3. Procedura changeEmployeeContactInfo
    
@@ -847,6 +968,8 @@ END
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 4. Procedura changeExamToPassed
    
 Ustawia status zaliczenia danego egzaminu na zaliczony
@@ -875,6 +998,8 @@ END
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 5. Procedura changeModulePaidStatus
    
 Zmienia status płatności dla modułu i studenta
@@ -890,11 +1015,10 @@ BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
 		BEGIN
-			UPDATE modules_memberships
-				set initial_fee_paid = @initial_fee_paid_status,
-                                    paid = @normal_price_paid_status
-				where student_id = @student_id and
-                                    module_id = @module_id
+			UPDATE modules_orders
+				set initial_fee_paid = @initial_fee_paid_status, 
+					paid = @normal_price_paid_status
+				where student_id = @student_id and module_id = @module_id
 		END
 	END TRY
 	BEGIN CATCH
@@ -905,6 +1029,8 @@ BEGIN
 END
 GO
 ```
+
+<div style="page-break-after: always;"></div>
 
 6. Procedura changeProductPaidStatus
    
@@ -921,11 +1047,10 @@ BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
 		BEGIN
-			UPDATE products_memberships
-				set initial_fee_paid = @initial_fee_paid_status,
-                                    paid = @normal_price_paid_status
-				where student_id = @student_id and
-                                    product_id = @product_id
+			UPDATE products_orders
+				set initial_fee_paid = @initial_fee_paid_status, 
+					paid = @normal_price_paid_status
+				where student_id = @student_id and product_id = @product_id
 		END
 	END TRY
 	BEGIN CATCH
@@ -936,6 +1061,8 @@ BEGIN
 END
 GO
 ```
+
+<div style="page-break-after: always;"></div>
 
 7. Procedura createWebinar
 
@@ -957,8 +1084,7 @@ BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
 		IF @start_date > @end_date
-			BEGIN
-			;
+			BEGIN;
 			THROW 52000, N'Daty nie mają sensu', 1
 			END
 
@@ -967,8 +1093,7 @@ BEGIN
                 from lecturers
                 where lecturer_id = @supervisor_id
 			)
-			BEGIN
-			;
+			BEGIN;
 			THROW 52000, N'Wykłądowca nie istnieje', 1
 			END
 
@@ -1018,6 +1143,8 @@ END
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 8. Procedura createCourse
 
 Tworzy kurs
@@ -1039,16 +1166,14 @@ BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
 		IF @start_date > @end_date
-			BEGIN
-			;
+			BEGIN;
 			THROW 52000, N'Daty nie mają sensu', 1
 			END
 
 		IF not exists(
 				select * from lecturers where lecturer_id = @supervisor_id
 			)
-			BEGIN
-			;
+			BEGIN;
 			THROW 52000, N'Wykłądowca nie istnieje', 1
 			END
 
@@ -1098,12 +1223,13 @@ END
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
 9. Procedura createStudies
 
 Tworzy studia
 ```sql
 CREATE PROCEDURE [dbo].[createStudies]
-	-- Add the parameters for the stored procedure here
 	@product_name varchar(50),
 	@start_date datetime,
 	@end_date datetime,
@@ -1115,21 +1241,17 @@ CREATE PROCEDURE [dbo].[createStudies]
 	@syllabus_link varchar(100)
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-	begin try
+	BEGIN TRY
     IF @start_date > @end_date
-			BEGIN
-			;
+			BEGIN;
 			THROW 52000, N'Daty nie mają sensu', 1
 			END
 
-		IF not exists(
+		IF NOT EXISTS(
 				select * from lecturers where lecturer_id = @supervisor_id
 			)
-			BEGIN
-			;
+			BEGIN;
 			THROW 52000, N'Wykłądowca nie istnieje', 1
 			END
 
@@ -1162,9 +1284,9 @@ BEGIN
 				,@supervisor_id
 				,@language
 				,@students_limit)
-		insert into [dbo].[studies]
+		INSERT INTO [dbo].[studies]
 		([studies_id],[sylabus_link])
-		values
+		VALUES
 		(@product_id, @syllabus_link)
 END try
 BEGIN CATCH
@@ -1175,40 +1297,40 @@ BEGIN CATCH
 end
 GO
 ```
+
+<div style="page-break-after: always;"></div>
+
 10. Procedura createApprenticeship
 
 Tworzy praktyki
 ```sql
 CREATE PROCEDURE [dbo].[createApprenticeship]
-	-- Add the parameters for the stored procedure here
 	@apprenticeship_name varchar(50),
 	@start_date datetime,
 	@end_date datetime
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	BEGIN TRY
+		IF @start_date > @end_date
+			BEGIN;
+			THROW 52000, N'Daty nie mają sensu', 1
+   			END
 
-    begin try
-		if @start_date > @end_date
-   begin;
-	throw 52000, N'Daty nie mają sensu', 1
-   end
-   DECLARE @apprenticeship_id INT
+		DECLARE @apprenticeship_id INT
 		SELECT @apprenticeship_id = ISNULL(MAX(apprenticeship_id), 0) + 1
-		from apprenticeships
-	insert into apprenticeships
-	(apprenticeship_id,
-	apprenticeship_name,
-	start_date,
-	end_date)
-	values
-	(@apprenticeship_id,
-	@apprenticeship_name,
-	@start_date,
-	@end_date)
-	end try
+		FROM apprenticeships
+			INSERT INTO apprenticeships
+				(apprenticeship_id,
+				apprenticeship_name,
+				start_date,
+				end_date)
+			VALUES
+				(@apprenticeship_id,
+				@apprenticeship_name,
+				@start_date,
+				@end_date)
+	END TRY
 	BEGIN CATCH
 		DECLARE @msg nvarchar(2048)
 			=N'Błąd z tworzeniem kursu: ' + ERROR_MESSAGE();
@@ -1216,185 +1338,11 @@ BEGIN
 	END CATCH
 END
 GO
-
-
-
 ```
 
+<div style="page-break-after: always;"></div>
 
-11. Procedura deleteWebinar
-   
-Usuwa webinar
-
-```sql
-CREATE PROCEDURE [dbo].[deleteWebinar]
-	@webinar_id int
-AS
-BEGIN
-	SET NOCOUNT ON;
-    BEGIN TRY
-	if not exists(
-	select * from products where product_id = @webinar_id)
-	BEGIN
-			;
-			THROW 52000, N'Webinar nie istnieje', 1
-			END
-	delete from products where product_id = @webinar_id
-	delete from webinars where webinar_id = @webinar_id
-END TRY
-begin catch
-	DECLARE @msg nvarchar(2048)
-			=N'Błąd z usuwaniem webinaru: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
-GO
-```
-
-12. Procedura deleteStudies
-
-Usuwa studia
-
-```sql
-CREATE PROCEDURE [dbo].[deleteStudies] 
-	-- Add the parameters for the stored procedure here
-	@studies_id int
-AS
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-    begin try
-	if not exists(
-	select * from products where product_id = @studies_id)
-	BEGIN
-			;
-			THROW 52000, N'Studia nie istnieją', 1
-			END
-	delete from products where product_id = @studies_id
-	delete from studies where studies_id = @studies_id
-end try
-begin catch
-	DECLARE @msg nvarchar(2048)
-			=N'Błąd z usuwaniem studiów: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	end catch
-END
-GO
-```
-
-13. Procedura deleteCourse
-
-Usuwa kurs
-
-```sql
-CREATE PROCEDURE [dbo].[deleteCourse] 
-	-- Add the parameters for the stored procedure here
-	@course_id int
-AS
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-    begin try
-		if not exists(
-			select * from products where product_id = @course_id
-		)
-		BEGIN
-			;
-			THROW 52000, N'Kurs nie istnieje', 1
-			END
-		delete from products where product_id = @course_id
-		delete from courses where course_id = @course_id
-	end try
-	begin catch
-	DECLARE @msg nvarchar(2048)
-			=N'Błąd z usuwaniem kursu: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	end catch
-END
-GO
-
-```
-
-14. Procedura deleteApprenticeship
-
-Usuwa praktyki
-```sql
-CREATE PROCEDURE [dbo].[deleteApprenticeship]
-	-- Add the parameters for the stored procedure here
-	@apprenticeship_id int
-AS
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-   begin try
-	if not exists(
-	select * from apprenticeships where apprenticeship_id = @apprenticeship_id
-	)
-	 begin;
-	throw 52000, N'Dane praktyki nie istnieją', 1
-   end
-
-   delete from apprenticeships where apprenticeship_id = @apprenticeship_id
-
-   end try
-   BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
-			=N'Błąd z usuwaniem praktyk: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
-GO
-```
-
-15. Procedura deleteEmployee
-
-Usuwa pracownika
-
-```sql
-CREATE PROCEDURE [dbo].[deleteEmployee]
-	@employee_id int
-AS
-BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-    begin try
-	if not exists(select * from employees where employee_id = @employee_id)
-	begin;
-		throw 52000, N'Dany pracownik nie istnieje', 1
-	end
-
-	delete from employees where employee_id = @employee_id
-
-	if @employee_id in (select lecturer_id from lecturers)
-	begin;
-	delete from lecturers where lecturer_id = @employee_id
-	end
-
-	if @employee_id in (select translator_id from translators)
-	begin;
-	delete from translators where translator_id = @employee_id
-	end
-
-	end try
-	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
-			=N'Błąd przy usuwaniu pracownika ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
-GO
-
-```
-
-16. Procedura editWebinar
+11. Procedura editWebinar
 
 Zmienia informacje o webinarze
 
@@ -1413,31 +1361,29 @@ CREATE PROCEDURE [dbo].[editWebinar]
 AS
 BEGIN
 	SET NOCOUNT ON;
+	BEGIN TRY
 
-   begin try
+	IF @new_start_date > @new_end_date
+		BEGIN;
+		THROW 52000, N'Daty nie mają sensu', 1
+		END
 
-   if @new_start_date > @new_end_date
-   begin;
-	throw 52000, N'Daty nie mają sensu', 1
-   end
-
-   if not exists(
-	select * from products where product_id=@webinar_id
-   )
-   BEGIN
-			;
-			THROW 52000, N'Webinar nie istnieje', 1
-	END
-
-	if not exists(
-		select * from lecturers where lecturer_id=@new_supervisor_id
+	IF NOT EXISTS(
+		SELECT * FROM products WHERE product_id=@webinar_id
 	)
-			begin;
-			throw 52000, N'Wykładowca nie istnieje', 1
-			end
+		BEGIN;
+		THROW 52000, N'Webinar nie istnieje', 1
+		END
+
+	if NOT EXISTS(
+		SELECT * FROM lecturers WHERE lecturer_id=@new_supervisor_id
+	)
+		BEGIN;
+		THROW 52000, N'Wykładowca nie istnieje', 1
+		END
 
 
-	update products
+	UPDATE products
 	set
 	product_name = @new_product_name,
 	start_date = @new_start_date,
@@ -1450,10 +1396,11 @@ BEGIN
 	students_limit = @new_students_limit
 	where product_id = @webinar_id
 
-	update webinars
+	UPDATE webinars
 	set link = @new_link
 	where webinar_id = @webinar_id
-	end try
+	END TRY
+
 	BEGIN CATCH
 		DECLARE @msg nvarchar(2048)
 			=N'Błąd z aktualizowaniem webianru: ' + ERROR_MESSAGE();
@@ -1463,7 +1410,9 @@ END
 GO
 ```
 
-17.  Procedura editStudies
+<div style="page-break-after: always;"></div>
+
+12.  Procedura editStudies
 
 Edytuje studia
 
@@ -1482,30 +1431,28 @@ CREATE PROCEDURE [dbo].[editStudies]
 	@new_syllabus_link varchar(100)
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-    begin try
-		if @new_start_date > @new_end_date
-   begin;
-	throw 52000, N'Daty nie mają sensu', 1
-   end
+	begin try
 
-   if not exists(
-	select * from products where product_id=@studies_id
-   )
-   BEGIN
-			;
-			THROW 52000, N'Kurs nie istnieje', 1
-	END
+	if @new_start_date > @new_end_date
+		begin;
+		throw 52000, N'Daty nie mają sensu', 1
+		end
+
+	if not exists(
+		select * from products where product_id=@studies_id
+	)
+		BEGIN;
+		THROW 52000, N'Kurs nie istnieje', 1
+		END
 
 	if not exists(
 		select * from lecturers where lecturer_id=@new_supervisor_id
 	)		
-			begin;
-			throw 52000, N'Wykładowca nie istnieje', 1
-			end
+		begin;
+		throw 52000, N'Wykładowca nie istnieje', 1
+		end
 
 	update products
 	set 
@@ -1534,13 +1481,15 @@ BEGIN
 END
 GO
 ```
-18. Procedura editCourse
+
+<div style="page-break-after: always;"></div>
+
+13. Procedura editCourse
 
 Edytuje kurs
 
 ```sql
 CREATE PROCEDURE [dbo].[editCourse]
-	-- Add the parameters for the stored procedure here
 	@course_id int,
 	@new_product_name varchar(50),
 	@new_start_date datetime,
@@ -1554,41 +1503,40 @@ CREATE PROCEDURE [dbo].[editCourse]
 	@new_type_id int
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
    begin try
 
-   if @new_start_date > @new_end_date
-   begin;
-	throw 52000, N'Daty nie mają sensu', 1
-   end
+	if @new_start_date > @new_end_date
+		begin;
+		throw 52000, N'Daty nie mają sensu', 1
+		end
 
-   if not exists(
-	select * from products where product_id=@course_id
-   )
-   BEGIN
-			;
-			THROW 52000, N'Kurs nie istnieje', 1
-	END
+	if not exists(
+		select * from products where product_id=@course_id
+	)
+		BEGIN;
+		THROW 52000, N'Kurs nie istnieje', 1
+		END
 
 	if not exists(
 		select * from lecturers where lecturer_id=@new_supervisor_id
 	)		
-			begin;
-			throw 52000, N'Wykładowca nie istnieje', 1
-			end
+		begin;
+		throw 52000, N'Wykładowca nie istnieje', 1
+		end
+
 	if not exists(
-	select * from course_types where type_id=@new_type_id)
-	begin;
-	throw 52000, N'type kursu nie istnieje', 1
-	end
+		select * from course_types where type_id=@new_type_id
+	)
+		begin;
+		throw 52000, N'type kursu nie istnieje', 1
+		end
 
 	if @new_type not in ('webinar', 'course','studies')
-	begin;
-	throw 52000, N'nieprawidłowy typ produktu', 1
-	end
+		begin;
+		throw 52000, N'nieprawidłowy typ produktu', 1
+		end
 
 
 	update products
@@ -1608,6 +1556,7 @@ BEGIN
 	set type_id = @new_type_id
 	where course_id = @course_id
 	end try
+
 	BEGIN CATCH
 		DECLARE @msg nvarchar(2048)
 			=N'Błąd z aktualizowaniem kursu: ' + ERROR_MESSAGE();
@@ -1615,11 +1564,11 @@ BEGIN
 	END CATCH
 END
 GO
-
-
 ```
 
-19. Procedura editApprenticeship
+<div style="page-break-after: always;"></div>
+
+14. Procedura editApprenticeship
 
 Edytuje praktyki
 
@@ -1631,32 +1580,31 @@ CREATE PROCEDURE [dbo].[editApprenticeship]
 	@new_end_date datetime
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-    begin try
-		
-		if @new_start_date > @new_end_date
-			begin;
-	throw 52000, N'Daty nie mają sensu', 1
-   end
+	begin try
 
-		if not exists(
-		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
-		)
+	if @new_start_date > @new_end_date
 		begin;
-	throw 52000, N'Dane praktyki nie istnieją', 1
-   end
+		throw 52000, N'Daty nie mają sensu', 1
+		end
 
-   update apprenticeships
-   set
-   apprenticeship_name = @new_apprenticeship_name,
-   start_date = @new_start_date,
-   end_date = @new_end_date
-   where 
-   apprenticeship_id = @apprenticeship_id
-	end try
+	if not exists(
+		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
+	)
+		begin;
+		throw 52000, N'Dane praktyki nie istnieją', 1
+   		end
+
+	update apprenticeships
+	set
+	apprenticeship_name = @new_apprenticeship_name,
+	start_date = @new_start_date,
+	end_date = @new_end_date
+	where 
+	apprenticeship_id = @apprenticeship_id
+
+	END TRY
 
 	BEGIN CATCH
 		DECLARE @msg nvarchar(2048)
@@ -1665,13 +1613,11 @@ BEGIN
 	END CATCH
 END
 GO
-
 ```
 
+<div style="page-break-after: always;"></div>
 
-
-
-20. Procedura getApprenticeshipsForStudies 
+15. Procedura getApprenticeshipsForStudies 
 
 Wyświetla wszystkie praktyki dla danych studiów
 
@@ -1685,7 +1631,9 @@ AS
 GO
 ```
 
-21.  Procedura addNewStudent 
+<div style="page-break-after: always;"></div>
+
+16.  Procedura addNewStudent 
 
 Dodaje nowego studenta do bazy
 
@@ -1736,13 +1684,14 @@ END;
 GO
 ```
 
-22. Procedura addEmployee
+<div style="page-break-after: always;"></div>
+
+17. Procedura addEmployee
 
 Dodaje pracownika
 
 ```sql
 CREATE PROCEDURE [dbo].[addEmployee]
-	-- Add the parameters for the stored procedure here
 	@role varchar(50),
 	@name varchar(50),
 	@second_name varchar(50),
@@ -1760,8 +1709,6 @@ CREATE PROCEDURE [dbo].[addEmployee]
 
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
     begin try
@@ -1773,38 +1720,37 @@ BEGIN
 		SELECT @employee_id = ISNULL(MAX(employee_id), 0) + 1
 		from employees
 	insert into employees
-	(employee_id,
-	role,
-	name,
-	second_name,
-	surname,
-	birth_date,
-	country,
-	city,
-	adress,
-	postal_code,
-	phone,
-	email,
-	password,
-	title_of_courtesy,
-	hire_date)
-	values(
-	@employee_id,
-	@role,
-	@name,
-	@second_name,
-	@surname,
-	@birth_date,
-	@country,
-	@city,
-	@adress,
-	@postal_code,
-	@phone,
-	@email,
-	@password,
-	@title_of_courtesy,
-	@hire_date
-	)
+		(employee_id,
+		role,
+		name,
+		second_name,
+		surname,
+		birth_date,
+		country,
+		city,
+		adress,
+		postal_code,
+		phone,
+		email,
+		password,
+		title_of_courtesy,
+		hire_date)
+	VALUES
+		(@employee_id,
+		@role,
+		@name,
+		@second_name,
+		@surname,
+		@birth_date,
+		@country,
+		@city,
+		@adress,
+		@postal_code,
+		@phone,
+		@email,
+		@password,
+		@title_of_courtesy,
+		@hire_date)
 	end try
 	BEGIN CATCH
 		DECLARE @msg nvarchar(2048)
@@ -1813,35 +1759,51 @@ BEGIN
 	END CATCH
 END
 GO
-
 ```
 
+<div style="page-break-after: always;"></div>
 
-
-23.  Procedura addModuleMembership 
+18.  Procedura addModuleMembership 
 
 Dodaje moduł do koszyka
 
 ```sql
-CREATE PROCEDURE [dbo].[addModuleMembership] (
+CREATE PROCEDURE [dbo].[addModuleOrder] (
     @studentId INT,
     @moduleId INT,
-    @paid BIT,
-    @initialFeePaid BIT,
-    @discount FLOAT,
-    @payDeadline DATETIME,
-    @completed BIT
+	@orderDate DATETIME,
+	@discount FLOAT,
+	@initialFeePaid BIT,
+	@paid BIT,
+	@paymentLink varchar(255),
+	@payDeadline DATETIME
 )
 AS
 
-    INSERT INTO modules_memberships 
-	(student_id, module_id, paid, initial_fee_paid, discount, pay_deadline, completed)
+    INSERT INTO modules_orders
+		(student_id, 
+		module_id, 
+		order_date, 
+		discount, 
+		initial_fee_paid, 
+		paid, 
+		payment_link, 
+		pay_deadline)
     VALUES 
-	(@studentId, @moduleId, @paid, @initialFeePaid, @discount, @payDeadline, @completed);
+		(@studentId, 
+		@moduleId, 
+		@orderDate, 
+		@discount, 
+		@initialFeePaid, 
+		@paid, 
+		@paymentLink, 
+		@payDeadline);
 GO
 ```
 
-24.  Procedura addProductsMembership dodaje produkt do koszyka
+<div style="page-break-after: always;"></div>
+
+19.  Procedura addProductsMembership dodaje produkt do koszyka
 
 ```sql
 CREATE PROCEDURE addProductsMembership (
@@ -1856,11 +1818,14 @@ AS
 BEGIN
     INSERT INTO products_membership 
 	(student_id, product_id, paid, initial_fee_paid, discount, pay_deadline)
-    VALUES (@studentId, @productId, @paid, @initialFeePaid, @discount, @payDeadline);
+    VALUES 
+	(@studentId, @productId, @paid, @initialFeePaid, @discount, @payDeadline);
 END;
 ```
 
-25. Procedura getOwnedModules 
+<div style="page-break-after: always;"></div>
+
+20. Procedura getOwnedModules 
 
 zwraca posiadane moduły
 
@@ -1870,13 +1835,14 @@ CREATE PROCEDURE [dbo].[getOwnedModules] (
 )
 AS
     SELECT *
-    FROM modules_memberships
+    FROM modules_orders
     WHERE student_id = @studentId AND paid = 1;
-
 GO
 ```
 
-26.  Procedura getOwnedProducts 
+<div style="page-break-after: always;"></div>
+
+21.  Procedura getOwnedProducts 
 
 Zwraca posiadane produkty
 
@@ -1886,13 +1852,14 @@ CREATE PROCEDURE [dbo].[getOwnedProducts] (
 )
 AS
     SELECT *
-    FROM products_memberships
+    FROM products_orders
     WHERE student_id = @studentId AND paid = 1;
-
 GO
 ```
 
-27.   Procedura getProductsInBasket 
+<div style="page-break-after: always;"></div>
+
+22. Procedura getProductsInBasket 
   
 Zwraca produkty w koszyku
 
@@ -1902,28 +1869,27 @@ CREATE PROCEDURE [dbo].[getProductsInBasket] (
 )
 AS
     SELECT *
-    FROM products_memberships
+    FROM products_orders
     WHERE student_id = @studentId AND paid = 0;
 
 GO
 ```
 
-28. Procedura assignApprenticeshipToStudies
+<div style="page-break-after: always;"></div>
+
+23. Procedura assignApprenticeshipToStudies
 
 Przypisuje praktyki do studiów
 
 ```sql
 CREATE PROCEDURE [dbo].[assignApprenticeshipToStudies]
-	-- Add the parameters for the stored procedure here
 	@studies_id int,
 	@apprenticeship_id int
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-    begin try
+    	begin try
 		if not exists(
 		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
 		)
@@ -1952,22 +1918,21 @@ END
 GO
 ```
 
-29. Procedura assignModuleToProduct
+<div style="page-break-after: always;"></div>
+
+24. Procedura assignModuleToProduct
 
 Przypisuje moduł do produktu
 
 ```sql
 CREATE PROCEDURE [dbo].[assignModuleToProduct]
-	-- Add the parameters for the stored procedure here
 	@module_id int,
 	@product_id int
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-   begin try
+	begin try
 	if not exists(
 	select * from modules where module_id = @module_id
 	)
@@ -1985,7 +1950,7 @@ BEGIN
 	insert into products_modules
 	(product_id, module_id)
 	values(@product_id, @module_id)
-   end try
+	end try
 
    BEGIN CATCH
 		DECLARE @msg nvarchar(2048)
@@ -1994,10 +1959,11 @@ BEGIN
 	END CATCH
 END
 GO
-
 ```
 
-30. Procedura addDiscountForModule
+<div style="page-break-after: always;"></div>
+
+25. Procedura addDiscountForModule
 
 Przyznaje zniżkę studentowi na moduł
 
@@ -2008,33 +1974,32 @@ CREATE PROCEDURE [dbo].[addDiscountForModule]
 	@discount float
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	begin try
 		if @discount > 1
-		begin;
+			begin;
 			throw 52000, N'Zniżka nie może byc większa niż 100%', 1
-		end
+			end
 
 		if not exists(select * from students where student_id = @student_id)
-		begin;
+			begin;
 			throw 52000, N'Nie ma takiego studenta', 1
-		end
+			end
 
 		if not exists(select * from modules where module_id = @module_id)
-		begin;
+			begin;
 			throw 52000, N'Nie ma takiego modułu', 1
-		end
+			end
 
-		if not exists(select * from modules_memberships 
-		where module_id = @module_id and student_id = @student_id)
-		begin;
+		if not exists(
+			select * from modules_memberships 
+			where module_id = @module_id and student_id = @student_id
+		)
+			begin;
 			throw 52000, N'Student nie posiada tego modułu w koszyku', 1
+			end
 
-		end
-
-		update modules_memberships
+		update modules_orders
 		set
 		discount = @discount
 		where module_id = @module_id and student_id = @student_id
@@ -2048,7 +2013,9 @@ END
 GO
 ```
 
-31. Procedura addDiscountForProduct
+<div style="page-break-after: always;"></div>
+
+26. Procedura addDiscountForProduct
 
 Przyznaje zniżkę studentowi na produkt
 
@@ -2059,33 +2026,32 @@ CREATE PROCEDURE [dbo].[addDiscountForProduct]
 	@discount float
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	begin try
 		if @discount > 1
-		begin;
+			begin;
 			throw 52000, N'Zniżka nie może byc większa niż 100%', 1
-		end
+			end
 
 		if not exists(select * from students where student_id = @student_id)
-		begin;
+			begin;
 			throw 52000, N'Nie ma takiego studenta', 1
-		end
+			end
 
 		if not exists(select * from products where product_id = @product_id)
-		begin;
+			begin;
 			throw 52000, N'Nie ma takiego produktu', 1
-		end
+			end
 
-		if not exists(select * from products_memberships 
-		where product_id = @product_id and student_id = @student_id)
-		begin;
+		if not exists(
+			select * from products_memberships 
+			where product_id = @product_id and student_id = @student_id
+		)
+			begin;
 			throw 52000, N'Student nie posiada tego produktu w koszyku', 1
+			end
 
-		end
-
-		update products_memberships
+		update products_orders
 		set
 		discount = @discount
 		where product_id = @product_id and student_id = @student_id
@@ -2096,5 +2062,463 @@ BEGIN
 		THROW 52000, @msg, 1
 	END CATCH
 END
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+#Funkcje
+
+1. Funkcja showAllStudentsOnModule
+
+Wyświetla wszystkich studentów przypisanych do podanego modułu
+
+```sql
+CREATE FUNCTION [dbo].[showAllStudentsOnModule]
+(	
+	@module_id int
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select s.student_id, s.name, s.second_name, s.surname 
+	from students as s
+	join modules_memberships as mm 
+	on mm.student_id = s.student_id and mm.module_id = @module_id
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+2. Funkcja showAllStudentsOnProduct
+
+Wyświetla wszystkich studentów przypisanych do podanego produktu
+
+```sql
+CREATE FUNCTION [dbo].[showAllStudentsOnProduct]
+(	
+	@prod_id int
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select s.student_id, s.name, s.second_name, s.surname 
+	from students as s
+	join products_memberships as pm 
+	on s.student_id = pm.student_id and pm.product_id = @prod_id
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+3. Funkcja showAttendanceOnModule
+
+Wyświetla obecność na danym module
+
+```sql
+CREATE FUNCTION [dbo].[showAttendanceOnModule]
+(	
+	@module_id int
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select student_id, attended 
+	from attendance 
+	where module_id = @module_id
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+4. Funkcja showAttendanceOnProduct
+
+Wyświetla obecność na modułach na danym produkcie
+
+```sql
+CREATE FUNCTION [dbo].[showAttendanceOnProduct]
+(	
+	@student_id int,
+	@product_id int
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	with
+	t1
+	as(
+		select module_id as mi 
+		from products_modules 
+		where product_id = @product_id
+	)
+
+	select * from attendance as a
+	join t1 on t1.mi = a.module_id and a.student_id=@student_id
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+5. Funkcja showModulesInDateRange
+
+Wyświetla wszystke moduły w danym przedziale czasowym
+
+```sql
+CREATE FUNCTION [dbo].[showModulesInDateRange] 
+(	
+	@start_date datetime,
+	@end_date datetime
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * from modules 
+	where start_date between @start_date and @end_date
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+6. Funkcja showProductsInDateRange
+
+Wyświetla wszystke produkty w danym przedziale czasowym
+
+```sql
+CREATE FUNCTION [dbo].[showProductsInDateRange] 
+(	
+	@start_date datetime,
+	@end_date datetime
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * from products 
+	where start_date between @start_date and @end_date
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+7. Funkcja showModulesInPriceRange
+
+Wyświetla wszystke moduły w danym przedziale cenowym
+
+```sql
+CREATE FUNCTION [dbo].[showModulesInPriceRange]
+(	
+	@left float, 
+	@right float
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * from modules 
+	where single_buy_price between @left and @right
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+8. Funkcja showProductsInPriceRange
+
+Wyświetla wszystke produkty w danym przedziale cenowym
+
+```sql
+CREATE FUNCTION [dbo].[showProductsInPriceRange]
+(	
+	@left float,
+	@right float
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * 
+	from products 
+	where price between @left and @right
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+9. Funkcja showModulesWithName
+
+Wyświetla wszystke moduły o danej nazwie
+
+```sql
+CREATE FUNCTION [dbo].[showModulesWithName] 
+(	
+	@name varchar(50)
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	SELECT * from modules 
+	where module_name = @name
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+10. Funkcja showProductsWithName
+
+Wyświetla wszystke produkty o danej nazwie
+
+```sql
+CREATE FUNCTION [dbo].[showProductsWithName]
+(	
+	@name varchar(50)
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * 
+	from products 
+	where product_name = @name
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+11. Funkcja showModulesSupervisedByLecturer
+
+Wyświetla wszystke moduły prowadzone przez danego wykładowcę
+
+```sql
+CREATE FUNCTION [dbo].[showModulesSupervisedByLecturer]
+(	
+	@lecturer_id int
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * 
+	from modules 
+	where lecturer_id = @lecturer_id
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+12. Funkcja showProductsSupervisedByLecturer
+
+Wyświetla wszystke produkty prowadzone których opiekunem jest dany wykładowca
+
+```sql
+CREATE FUNCTION [dbo].[showProductsSupervisedByLecturer]
+(	
+	@supervisor_id int
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * 
+	from products 
+	where supervisor_id = @supervisor_id
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+13. Funkcja showProductsWithLanguage
+
+Wyświetla wszystkie produkty prowadzone w podanym języku
+
+```sql
+CREATE FUNCTION [dbo].[showProductsWithLanguage]
+(	
+	@language varchar(50)
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	select * 
+	from products 
+	where language = @language
+)
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+#Triggery
+
+1. Trigger addProductAfterPurchase
+
+Trigger aktywujący się po uiszczeniu opłaty za produkt przez studenta (tabela products_orders), automatycznie ustawia przynależność do produktu (tabela products_memberships)
+
+```sql
+CREATE TRIGGER [dbo].[addProductAfterPurchase] on [dbo].[products_orders]
+after update
+AS 
+BEGIN
+   DECLARE @originalPaid bit;
+   select @originalPaid = paid from deleted
+
+   declare @updatedPaid bit;
+   select @updatedPaid = paid from inserted
+
+   declare @student_id int;
+   select @student_id = student_id from inserted
+
+   declare @product_id int;
+   select @product_id = product_id from inserted
+
+   if (@originalPaid = 0 and @updatedPaid = 1)
+	insert into products_memberships
+	(student_id,product_id)
+	values(@student_id, @product_id)
+	
+END
+GO
+
+ALTER TABLE [dbo].[products_orders] ENABLE TRIGGER [addProductAfterPurchase]
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+2. Trigger addModuleAfterPurchase
+
+Trigger aktywujący się po uiszczeniu opłaty za moduł przez studenta (tabela modules_orders), automatycznie ustawia przynależność do modułu (tabela modules_memberships)
+
+```sql
+CREATE TRIGGER [dbo].[addModuleAfterPurchase] on [dbo].[modules_orders]
+after update
+AS 
+BEGIN
+   DECLARE @originalPaid bit;
+   select @originalPaid = paid from deleted
+
+   declare @updatedPaid bit;
+   select @updatedPaid = paid from inserted
+
+   declare @student_id int;
+   select @student_id = student_id from inserted
+
+   declare @module_id int;
+   select @module_id = module_id from inserted
+
+   if (@originalPaid = 0 and @updatedPaid = 1)
+	insert into modules_memberships
+	(student_id,module_id)
+	values(@student_id, @module_id)
+	
+END
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+3. Trigger addAttendance
+
+Trigger aktywujący się po dodaniu przynależności do modułu dla studenta (tabela modules_memberships), automatycznie dodaje rekord z obenością studenta na danym module
+
+```sql
+CREATE TRIGGER [dbo].[addAttendance] on [dbo].[modules_memberships]
+after insert
+AS 
+BEGIN
+   declare @student_id int;
+   select @student_id = student_id from inserted
+
+   declare @module_id int;
+   select @module_id= module_id from inserted
+
+   insert into attendance(student_id,module_id,attended)
+   values(@student_id, @module_id, 0)
+	
+END
+GO
+
+ALTER TABLE [dbo].[modules_memberships] ENABLE TRIGGER [addAttendance]
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+4. Trigger addExam
+
+Trigger aktywujący się po dodaniu przynależności do studiów dla studenta (tabela products_memberships), automatycznie dodaje rekord ze stanem egzaminu końcowego dla tych studiów dla studenta (tabela studies_exam)
+```sql
+CREATE TRIGGER [dbo].[addExamTrigger] ON [dbo].[products_memberships]
+	after insert
+as
+begin
+	declare @product_id int;
+	select @product_id = product_id from inserted
+
+	declare @student_id int;
+	select @student_id = student_id from inserted
+
+	if exists(select * from studies where studies_id = @product_id)
+		insert into studies_exam
+		(student_id, studies_id, passed)
+		values(@student_id, @product_id, 0)
+end
+
+GO
+
+ALTER TABLE [dbo].[products_memberships] ENABLE TRIGGER [addExamTrigger]
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+5. Trigger addModulesOfProduct
+
+Trigger aktywujący się po dodaniu przynależności do produktu dla studenta (tabela products_memberships), automatycznie ustawia przynależność do wszystkich modułów należących do produktu (tabela modules_memberships)
+
+```sql
+CREATE TRIGGER [dbo].[addModulesOfProduct] on [dbo].[products_memberships]
+after insert
+AS 
+BEGIN
+	declare @student_id int;
+	select @student_id = student_id from inserted
+
+	declare @product_id int;
+	select @product_id = product_id from inserted
+
+	;with
+	t1
+	as
+	(
+		select module_id 
+		from products_modules 
+		where product_id=@product_id
+	)
+	
+	insert into modules_memberships(module_id, student_id)
+	select module_id, @student_id from t1
+	
+END
+GO
+
+ALTER TABLE [dbo].[products_memberships] ENABLE TRIGGER [addModulesOfProduct]
 GO
 ```
