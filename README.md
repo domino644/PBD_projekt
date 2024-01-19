@@ -2365,6 +2365,87 @@ GO
 
 <div style="page-break-after: always;"></div>
 
+14. Funkcja getNumberOfModulesSupervisedByLecturer
+
+Wyświetla dla podanego wykładowcy ile modułów prowadzi
+    
+```sql
+CREATE FUNCTION [dbo].[getNumberOfModulesSupervisedByLecturer]
+(
+	@lecturer_id int
+)
+RETURNS int
+AS
+BEGIN
+	
+	DECLARE @numberOfModules int;
+
+	select @numberOfModules = count(module_id) from modules where lecturer_id = @lecturer_id
+
+	return (@numberOfModules)
+
+END
+```
+
+<div style="page-break-after: always;"></div>
+
+15. Funckja getNumberOfModulesTranslatedByTranslator
+
+Wyświetla dla danego tłumacza w ilu modułach jest tłumaczem
+
+```sql
+CREATE FUNCTION [dbo].[getNumberOfModulesTranslatedByTranslator]
+(
+	@translator_id int
+)
+RETURNS int
+AS
+BEGIN
+	-- Declare the return variable here
+	DECLARE @numberOfModules int;
+
+	select @numberOfModules = count(module_id) from modules where translator_id = @translator_id
+
+	return (@numberOfModules)
+END
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+16. Funkcja getPassRateOfExam
+
+Dla podanych studiów zwraca ile procent studentów zdało egzamin
+
+```sql
+CREATE FUNCTION [dbo].[getPassRateOfExam]
+(
+	@studies_id int
+)
+RETURNS float
+AS
+BEGIN
+	DECLARE @total_students int;
+
+	select @total_students = count(student_id)
+	from studies_exam
+	where studies_id = @studies_id
+
+	declare @passed int;
+	
+	select @passed = count(student_id) from studies_exam where studies_id=@studies_id and passed=1
+
+	if @total_students = 0
+		return 0.0
+
+	return (@passed*100.0 / @total_students)
+
+END
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
 #Triggery
 
 1. Trigger addProductAfterPurchase
