@@ -834,39 +834,33 @@ GO
 
 <div style="page-break-after: always;"></div>
 
-3. Widok showAllStudentsWithModuleDebt
+3. Widok showDebt
 
-Wyświetla wszystkich studentów, którzy zalegają z opłatami za moduły
+Wyświetla wszytkich studentów, którzy zalegają z opłatami za moduły i produkty
 
 ```sql
-CREATE view [dbo].[showAllStudentsWithModuleDebt] AS
-	SELECT s.student_id, s.name, s.surname
-	FROM dbo.modules_orders AS mo 
-	INNER JOIN dbo.students AS s 
-	ON mo.student_id = s.student_id AND mo.paid = 0
-	GROUP BY s.student_id, s.name, s.surname
+CREATE VIEW [dbo].[showDebt] AS
+SELECT s.student_id, s.name, s.surname, m.module_name AS [moduły/produkty]
+FROM dbo.modules_orders AS mo 
+INNER JOIN dbo.students AS s 
+	ON mo.student_id = s.student_id AND paid = 0
+JOIN dbo.modules AS m 
+	ON m.module_id = mo.module_id
+GROUP BY s.student_id, s.name, s.surname, m.module_name
+
+UNION
+
+SELECT s.student_id, s.name, s.surname, p.product_name
+FROM dbo.products_orders AS po INNER JOIN
+dbo.students AS s ON po.student_id = s.student_id AND paid = 0
+JOIN dbo.products AS p ON p.product_id = po.product_id
+GROUP BY s.student_id, s.name, s.surname, p.product_name;
 GO
 ```
 
 <div style="page-break-after: always;"></div>
 
-4. Widok showAllStudentsWithProductDebt
-
-Wyświetla wszystkich studentów, którzy zalegają z opłatami za produkty
-
-```sql
-CREATE view [dbo].[showAllStudentsWithModuleDebt] AS
-	SELECT s.student_id, s.name, s.surname
-	FROM dbo.modules_orders AS mo 
-	INNER JOIN dbo.students AS s 
-	ON mo.student_id = s.student_id AND mo.paid = 0
-	GROUP BY s.student_id, s.name, s.surname
-GO
-```
-
-<div style="page-break-after: always;"></div>
-
-5. Widok attendanceOnFinishedProducts
+4. Widok attendanceOnFinishedProducts
 
 Wyświetla średnią obecność dla zakończonych produktów
 
@@ -881,7 +875,7 @@ GO
 
 <div style="page-break-after: always;"></div>
 
-6. Widok checkModulesFullness
+5. Widok checkModulesFullness
 
 Wyświetla dla każdego modułu limit studentów, ilość zapisanych studentów i czy moduł jest pełny
 
@@ -922,7 +916,7 @@ GO
 
 <div style="page-break-after: always;"></div>
 
-7.Widok checkProductFullness
+6. Widok checkProductFullness
 
 Wyświetla dla każdego produktu limit studentów, ilość zapisanych studentów i czy produkt jest pełny
 
@@ -963,7 +957,7 @@ GO
 
 <div style="page-break-after: always;"></div>
 
-8. Widok getOverlappingModulesForStudents
+7. Widok getOverlappingModulesForStudents
 
 Sprawdza dla każdego studenta czy jest zapisany na moduły które odbywają się w tym samym czasie.
 Jeżeli tak to wyświetla imię i nazwisko studenta, nazwy modułów które się pokrywają, i daty rozpoczęcia
@@ -999,7 +993,7 @@ GO
 
 <div style="page-break-after: always;"></div>
 
-9. Widok showAllCourses
+8. Widok showAllCourses
 
 Wyświetla nazwy wszystki kursów
 
@@ -1011,6 +1005,88 @@ where type = 'course'
 GO
 ```
 
+<div style="page-break-after: always;"></div>
+
+9. Widok showAllWebinars
+
+Wyświetla wszystkie webinary
+
+```sql
+CREATE VIEW [dbo].[showAllWebinars] AS
+SELECT product_name
+FROM products
+WHERE TYPE = 'webinar';
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+10. Widok showAllModules
+
+Wyświetla wszystkie moduły
+
+```sql
+CREATE VIEW [dbo].[showAllModules]
+AS
+SELECT 
+	module_id, 
+	module_name, 
+	type, 
+	start_date, 
+	end_date, 
+	classroom, lecturer_id, 
+	translator_id, students_limit, 
+	single_buy_price
+FROM dbo.modules
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+11. Widok showEnrolledInFutureEvents
+
+Wyświetla ilość osób zapisanych poszczególne moduły i produkty, które jeszcze się nie zaczęły
+
+```sql
+CREATE VIEW [dbo].[showEnrolledInFutureEvents] AS 
+SELECT product_name AS event, COUNT(*) AS enrolled, 'product' AS type
+FROM products AS p
+JOIN products_memberships AS pm ON pm.product_id = p.product_id
+WHERE p.start_date > GETDATE()
+GROUP BY product_name
+
+UNION ALL
+
+SELECT module_name AS event, COUNT(*) AS enrolled, 'module' AS type
+FROM modules AS m
+JOIN modules_memberships AS mm ON mm.module_id = m.module_id
+WHERE m.start_date > GETDATE()
+GROUP BY module_name;
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+12. Widok showModuleRevenue
+
+Wyświetla przychód danego wygenerowany przez dany moduł
+
+```sql
+CREATE VIEW [dbo].[showModuleRevenue]
+AS
+SELECT 
+	dbo.modules.module_id, 
+	dbo.modules.module_name, 
+	dbo.modules.type, 
+	dbo.modules.single_buy_price, 
+	SUM((dbo.modules.single_buy_price * dbo.modules_orders.paid) * 
+	(1 - dbo.modules_orders.discount)) AS revenue
+FROM dbo.modules_orders 
+	INNER JOIN dbo.modules 
+	ON dbo.modules_orders.module_id = dbo.modules.module_id
+GROUP BY dbo.modules.module_id, dbo.modules.module_name, dbo.modules.type, dbo.modules.single_buy_price;
+GO
+```
 <div style="page-break-after: always;"></div>
 
 # Procedures
