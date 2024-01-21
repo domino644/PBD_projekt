@@ -1,0 +1,1 @@
+SELECT dbo.getNumberOfModulesSupervisedByLecturer(4)

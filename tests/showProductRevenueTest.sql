@@ -1,0 +1,7 @@
+SELECT TOP (1000) [product_id]
+      ,[product_name]
+      ,[type]
+      ,[price]
+      ,[initial_fee]
+      ,[revenue]
+  FROM [u_tzmuda].[dbo].[showProductRevenue]

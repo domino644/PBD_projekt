@@ -1,0 +1,1 @@
+SELECT dbo.getPassRateOfExam(6)
