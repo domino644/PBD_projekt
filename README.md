@@ -3278,3 +3278,24 @@ TRIGGER [addModulesOfProduct]
 GO
 ```
 
+# Indeksy
+
+1. Indeks products_date_index
+
+```sql
+CREATE NONCLUSTERED INDEX [products_date_index] ON [dbo].[products]
+(
+	[start_date] ASC,
+	[end_date] ASC
+)
+```
+
+2. Indeks modules_date_index
+
+```sql
+CREATE NONCLUSTERED INDEX [modules_date_index] ON [dbo].[modules]
+(
+	[start_date] ASC,
+	[end_date] ASC
+)
+```
