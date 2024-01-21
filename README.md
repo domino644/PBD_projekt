@@ -2214,6 +2214,45 @@ GO
 
 <div style="page-break-after: always;"></div>
 
+27. Procedura deleteWebinar
+
+Procedura usuwa webinar o podanym id
+
+```sql
+CREATE PROCEDURE [dbo].[deleteWebinar] 
+	-- Add the parameters for the stored procedure here
+	@webinar_id INT
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    BEGIN TRY
+		BEGIN TRANSACTION;
+		IF NOT EXISTS(
+		SELECT * FROM products WHERE product_id = @webinar_id)
+			BEGIN;
+				THROW 52000, N'Webinar nie istnieje', 1;
+			END;
+		
+		DELETE FROM webinars WHERE webinar_id = @webinar_id;
+		DELETE FROM products WHERE product_id = @webinar_id;
+		COMMIT; 
+	END TRY
+	BEGIN CATCH
+		ROLLBACK;
+		DECLARE @msg NVARCHAR(2048)
+				=N'Błąd z usuwaniem webinaru: ' + ERROR_MESSAGE();
+			THROW 52000, @msg, 1;
+	END CATCH;
+END;
+GO
+
+<div style="page-break-after: always;"></div>
+
+```
+
 #Funkcje
 
 1. Funkcja showAllStudentsOnModule
