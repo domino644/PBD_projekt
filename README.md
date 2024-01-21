@@ -2594,18 +2594,21 @@ Wyświetla wszystkich studentów przypisanych do podanego modułu
 ```sql
 CREATE FUNCTION [dbo].[showAllStudentsOnModule]
 (	
-	@module_id int
+	@module_id INT
 )
 RETURNS TABLE 
 AS
 RETURN 
 (
-	select s.student_id, s.name, s.second_name, s.surname 
-	from students as s
-	join modules_memberships as mm 
-	on mm.student_id = s.student_id and mm.module_id = @module_id
-)
+	SELECT s.student_id, s.name, s.second_name, s.surname 
+	FROM students AS s
+	JOIN modules_memberships AS mm ON 
+	mm.student_id = s.student_id 
+	AND 
+	mm.module_id = @module_id
+);
 GO
+
 ```
 
 <div style="page-break-after: always;"></div>
@@ -2617,17 +2620,19 @@ Wyświetla wszystkich studentów przypisanych do podanego produktu
 ```sql
 CREATE FUNCTION [dbo].[showAllStudentsOnProduct]
 (	
-	@prod_id int
+	@prod_id INT
 )
 RETURNS TABLE 
 AS
 RETURN 
 (
-	select s.student_id, s.name, s.second_name, s.surname 
-	from students as s
-	join products_memberships as pm 
-	on s.student_id = pm.student_id and pm.product_id = @prod_id
-)
+	SELECT s.student_id, s.name, s.second_name, s.surname 
+	FROM students AS s
+	JOIN products_memberships AS pm ON 
+	s.student_id = pm.student_id 
+	AND 
+	pm.product_id = @prod_id
+);
 GO
 ```
 
@@ -2638,19 +2643,19 @@ GO
 Wyświetla obecność na danym module
 
 ```sql
-CREATE FUNCTION [dbo].[showAttendanceOnModule]
+CCREATE FUNCTION [dbo].[showAttendanceOnModule]
 (	
-	@module_id int
+	@module_id INT
 )
 RETURNS TABLE 
 AS
 RETURN 
 (
-	select student_id, attended 
-	from attendance 
-	where module_id = @module_id
-)
+	SELECT student_id, attended FROM attendance 
+	WHERE module_id = @module_id
+);
 GO
+
 ```
 
 <div style="page-break-after: always;"></div>
@@ -2662,24 +2667,22 @@ Wyświetla obecność na modułach na danym produkcie
 ```sql
 CREATE FUNCTION [dbo].[showAttendanceOnProduct]
 (	
-	@student_id int,
-	@product_id int
+	@product_id INT
 )
 RETURNS TABLE 
 AS
 RETURN 
 (
-	with
+	WITH
 	t1
-	as(
-		select module_id as mi 
-		from products_modules 
-		where product_id = @product_id
+	AS(
+		SELECT module_id AS mi FROM products_modules 
+		WHERE product_id = @product_id
 	)
 
-	select * from attendance as a
-	join t1 on t1.mi = a.module_id and a.student_id=@student_id
-)
+	SELECT a.* FROM attendance AS a
+	JOIN t1 ON t1.mi = a.module_id
+);
 GO
 ```
 
@@ -2692,16 +2695,16 @@ Wyświetla wszystke moduły w danym przedziale czasowym
 ```sql
 CREATE FUNCTION [dbo].[showModulesInDateRange] 
 (	
-	@start_date datetime,
-	@end_date datetime
+	@start_date DATETIME,
+	@end_date DATETIME
 )
 RETURNS TABLE 
 AS
 RETURN 
 (
-	select * from modules 
-	where start_date between @start_date and @end_date
-)
+	SELECT * FROM modules 
+	WHERE start_date BETWEEN @start_date AND @end_date
+);
 GO
 ```
 
@@ -3057,7 +3060,56 @@ GO
 
 <div style="page-break-after: always;"></div>
 
-#Triggery
+19. Funkcja attendanceForStudent
+
+Zwraca listę obecności na dotychczasowo odbytych modułach dla studenta.
+```sql
+CREATE FUNCTION [dbo].[attendenceForStudent]
+(	
+	@student_id INT
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	SELECT m.module_name, m.start_date, a.attended 
+	FROM modules AS m
+		JOIN attendance AS a 
+			ON a.module_id = m.module_id 
+			AND 
+			a.student_id = @student_id 
+			AND 
+			m.end_date < GETDATE()
+);
+GO
+
+```
+<div style="page-break-after: always;"></div>
+
+20. Funkcja getStudentsWithLowAttendence
+
+Funkcja zwraca liste studentów na danych studiach, którzy mają mniej niz 80% frekwencji
+
+```sql
+CREATE FUNCTION [dbo].[getStudentsWithLowAttendence]
+(	
+	@studies_id INT
+)
+RETURNS TABLE 
+AS
+RETURN 
+(
+	SELECT s.name, s.second_name, s.surname, 
+	[dbo].[getStudentsAttendanceRate]
+	(@studies_id, s.student_id) AS [Attendence Percentege] 
+	FROM students AS s 
+	WHERE [dbo].[getStudentsAttendanceRate]
+	(@studies_id, s.student_id) < 80
+);
+GO
+```
+ 
+# Triggery
 
 1. Trigger addProductAfterPurchase
 
