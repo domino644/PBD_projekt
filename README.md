@@ -1571,137 +1571,169 @@ Zmienia informacje o webinarze
 
 ```sql
 CREATE PROCEDURE [dbo].[editWebinar]
-	@webinar_id int,
-	@new_product_name varchar(50),
-	@new_start_date datetime,
-	@new_end_date datetime,
-	@new_price float,
-	@new_initial_fee float,
-	@new_supervisor_id int,
-	@new_language varchar(50),
-	@new_students_limit int,
-	@new_link varchar(100)
+	-- Add the parameters for the stored procedure here
+	@webinar_id INT,
+	@new_product_name VARCHAR(50) = NULL,
+	@new_start_date DATETIME = NULL,
+	@new_end_date DATETIME = NULL,
+	@new_price NUMERIC(10,2) = NULL,
+	@new_initial_fee NUMERIC(10,2) = NULL,
+	@new_supervisor_id INT = NULL,
+	@new_language VARCHAR(50) = NULL,
+	@new_students_limit INT = NULL,
+	@new_link VARCHAR(100) = NULL
 AS
 BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-	BEGIN TRY
 
-	IF @new_start_date > @new_end_date
-		BEGIN;
-		THROW 52000, N'Daty nie mają sensu', 1
-		END
+   BEGIN TRY
+
+   IF @new_start_date > @new_end_date
+   BEGIN;
+	throw 52000, N'Daty nie mają sensu', 1;
+   END;
+
+   IF NOT EXISTS(
+	SELECT * FROM products WHERE product_id=@webinar_id
+   )
+   BEGIN;
+			THROW 52000, N'Webinar nie istnieje', 1;
+	END;
 
 	IF NOT EXISTS(
-		SELECT * FROM products WHERE product_id=@webinar_id
-	)
-		BEGIN;
-		THROW 52000, N'Webinar nie istnieje', 1
-		END
-
-	if NOT EXISTS(
 		SELECT * FROM lecturers WHERE lecturer_id=@new_supervisor_id
-	)
-		BEGIN;
-		THROW 52000, N'Wykładowca nie istnieje', 1
-		END
+	)		
+		AND
+		@new_supervisor_id IS NOT NULL
+			BEGIN;
+			throw 52000, N'Wykładowca nie istnieje', 1;
+			END;
 
+		IF EXISTS(SELECT * FROM products 
+		WHERE product_id = @webinar_id 
+		AND 
+		start_date < GETDATE())
+		BEGIN;
+			THROW 52000, 
+			N'Webinar się już zaczął, nie można go edytować!', 1;
+		END;
 
 	UPDATE products
-	set
-	product_name = @new_product_name,
-	start_date = @new_start_date,
-	end_date = @new_end_date,
-	type='webinar',
-	price=@new_price,
-	initial_fee = @new_initial_fee,
-	supervisor_id = @new_supervisor_id,
-	language = @new_language,
-	students_limit = @new_students_limit
-	where product_id = @webinar_id
+	SET 
+            product_name = ISNULL(@new_product_name, product_name),
+            start_date = ISNULL(@new_start_date, start_date),
+            end_date = ISNULL(@new_end_date, end_date),
+            type = 'webinar',
+            price = ISNULL(@new_price, price),
+            initial_fee = ISNULL(@new_initial_fee, initial_fee),
+            supervisor_id = ISNULL(@new_supervisor_id, supervisor_id),
+            language = ISNULL(@new_language, language),
+            students_limit = ISNULL(@new_students_limit, students_limit)
+        WHERE
+            product_id = @webinar_id;
 
 	UPDATE webinars
-	set link = @new_link
-	where webinar_id = @webinar_id
+	SET link = ISNULL(@new_link, link)
+	WHERE webinar_id = @webinar_id;
 	END TRY
-
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z aktualizowaniem webianru: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
+
 ```
 
 <div style="page-break-after: always;"></div>
 
-12.  Procedura editStudies
+1.   Procedura editStudies
 
 Edytuje studia
 
 ```sql
 CREATE PROCEDURE [dbo].[editStudies]
-	@studies_id int,
-	@new_product_name varchar(50),
-	@new_start_date datetime,
-	@new_end_date datetime,
-	@new_type varchar(50),
-	@new_price float,
-	@new_initial_fee float,
-	@new_supervisor_id int,
-	@new_language varchar(50),
-	@new_students_limit int,
-	@new_syllabus_link varchar(100)
+    -- Add the parameters for the stored procedure here
+    @studies_id INT,
+    @new_product_name VARCHAR(50) = NULL,
+    @new_start_date DATETIME = NULL,
+    @new_end_date DATETIME = NULL,
+    @new_type VARCHAR(50) = NULL,
+    @new_price FLOAT = NULL,
+    @new_initial_fee FLOAT = NULL,
+    @new_supervisor_id INT = NULL,
+    @new_language VARCHAR(50) = NULL,
+    @new_students_limit INT = NULL,
+    @new_syllabus_link VARCHAR(100) = NULL
 AS
 BEGIN
-	SET NOCOUNT ON;
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
 
-	begin try
+    BEGIN TRY
+        IF @new_start_date > @new_end_date
+        BEGIN;
+            THROW 52000, N'Daty nie mają sensu', 1;
+        END;
 
-	if @new_start_date > @new_end_date
-		begin;
-		throw 52000, N'Daty nie mają sensu', 1
-		end
+        IF NOT EXISTS (
+			SELECT * FROM products 
+			WHERE product_id = @studies_id)
+        BEGIN;
+            THROW 52000, N'Kurs nie istnieje', 1;
+        END;
 
-	if not exists(
-		select * from products where product_id=@studies_id
-	)
+        IF @new_supervisor_id IS NOT NULL 
+		AND 
+		NOT EXISTS 
+		(
+			SELECT * FROM lecturers WHERE lecturer_id = @new_supervisor_id
+		)
+        BEGIN;
+            THROW 52000, N'Wykładowca nie istnieje', 1;
+        END;
+
+		IF EXISTS(
+			SELECT * FROM products 
+			WHERE product_id = @studies_id 
+			AND 
+			start_date < GETDATE())
 		BEGIN;
-		THROW 52000, N'Kurs nie istnieje', 1
-		END
+			THROW 52000, 
+			N'Studia się już zaczęły, nie można ich edytować!', 1;
+		END;
 
-	if not exists(
-		select * from lecturers where lecturer_id=@new_supervisor_id
-	)		
-		begin;
-		throw 52000, N'Wykładowca nie istnieje', 1
-		end
+        UPDATE products
+        SET
+            product_name = ISNULL(@new_product_name, product_name),
+            start_date = ISNULL(@new_start_date, start_date),
+            end_date = ISNULL(@new_end_date, end_date),
+            TYPE = ISNULL(@new_type, TYPE),
+            price = ISNULL(@new_price, price),
+            initial_fee = ISNULL(@new_initial_fee, initial_fee),
+            supervisor_id = ISNULL(@new_supervisor_id, supervisor_id),
+            LANGUAGE = ISNULL(@new_language, LANGUAGE),
+            students_limit = ISNULL(@new_students_limit, students_limit)
+        WHERE
+            product_id = @studies_id;
 
-	update products
-	set 
-	product_name = @new_product_name, 
-	start_date = @new_start_date, 
-	end_date = @new_end_date, 
-	type=@new_type, 
-	price=@new_price, 
-	initial_fee = @new_initial_fee, 
-	supervisor_id = @new_supervisor_id, 
-	language = @new_language,
-	students_limit = @new_students_limit
-	where product_id = @studies_id
+        UPDATE studies
+        SET
+            sylabus_link = ISNULL(@new_syllabus_link, sylabus_link)
+        WHERE
+            studies_id = @studies_id;
 
-	update studies
-	set sylabus_link = @new_syllabus_link
-	where studies_id=@studies_id
-
-	end try
-
-	begin catch
-		DECLARE @msg nvarchar(2048)
-			=N'Błąd z aktualizowaniem studiów: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	end catch
-END
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048)
+                = N'Błąd z aktualizowaniem studiów: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH;
+END;
 GO
 ```
 
@@ -1713,79 +1745,102 @@ Edytuje kurs
 
 ```sql
 CREATE PROCEDURE [dbo].[editCourse]
-	@course_id int,
-	@new_product_name varchar(50),
-	@new_start_date datetime,
-	@new_end_date datetime,
-	@new_type varchar(50),
-	@new_price float,
-	@new_initial_fee float,
-	@new_supervisor_id int,
-	@new_language varchar(50),
-	@new_students_limit int,
-	@new_type_id int
+    -- Add the parameters for the stored procedure here
+    @course_id INT,
+    @new_product_name VARCHAR(50) = NULL,
+    @new_start_date DATETIME = NULL,
+    @new_end_date DATETIME = NULL,
+    @new_type VARCHAR(50) = NULL,
+    @new_price FLOAT = NULL,
+    @new_initial_fee FLOAT = NULL,
+    @new_supervisor_id INT = NULL,
+    @new_language VARCHAR(50) = NULL,
+    @new_students_limit INT = NULL,
+    @new_type_id INT = NULL
 AS
 BEGIN
-	SET NOCOUNT ON;
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
 
-   begin try
+    BEGIN TRY
+        IF @new_start_date > @new_end_date
+        BEGIN;
+            THROW 52000, N'Daty nie mają sensu', 1;
+        END;
 
-	if @new_start_date > @new_end_date
-		begin;
-		throw 52000, N'Daty nie mają sensu', 1
-		end
+        IF NOT EXISTS (SELECT * FROM products 
+		WHERE product_id = @course_id)
+        BEGIN;
+            THROW 52000, N'Kurs nie istnieje', 1;
+        END;
 
-	if not exists(
-		select * from products where product_id=@course_id
-	)
+        IF @new_supervisor_id IS NOT NULL 
+		AND 
+		NOT EXISTS 
+		(
+			SELECT * FROM lecturers 
+			WHERE lecturer_id = @new_supervisor_id
+		)
+        BEGIN;
+            THROW 52000, N'Wykładowca nie istnieje', 1;
+        END;
+
+        IF @new_type_id IS NOT NULL 
+		AND 
+		NOT EXISTS (
+			SELECT * FROM course_types 
+			WHERE TYPE_ID = @new_type_id
+		)
+        BEGIN;
+            THROW 52000, N'type kursu nie istnieje', 1;
+        END;
+
+        IF @new_type IS NOT NULL 
+		AND 
+		@new_type NOT IN 
+		('webinar', 'course', 'studies')
+        BEGIN;
+            THROW 52000, N'nieprawidłowy typ produktu', 1;
+        END;
+
+		IF EXISTS(
+			SELECT * FROM products 
+				WHERE product_id = @course_id 
+				AND 
+				start_date < GETDATE())
 		BEGIN;
-		THROW 52000, N'Kurs nie istnieje', 1
-		END
+			THROW 52000, 
+			N'Kurs się już zaczął, nie można go edytować!', 1;
+		END;
 
-	if not exists(
-		select * from lecturers where lecturer_id=@new_supervisor_id
-	)		
-		begin;
-		throw 52000, N'Wykładowca nie istnieje', 1
-		end
+        UPDATE products
+        SET
+            product_name = ISNULL(@new_product_name, product_name),
+            start_date = ISNULL(@new_start_date, start_date),
+            end_date = ISNULL(@new_end_date, end_date),
+            TYPE = ISNULL(@new_type, TYPE),
+            price = ISNULL(@new_price, price),
+            initial_fee = ISNULL(@new_initial_fee, initial_fee),
+            supervisor_id = ISNULL(@new_supervisor_id, supervisor_id),
+            LANGUAGE = ISNULL(@new_language, LANGUAGE),
+            students_limit = ISNULL(@new_students_limit, students_limit)
+        WHERE
+            product_id = @course_id;
 
-	if not exists(
-		select * from course_types where type_id=@new_type_id
-	)
-		begin;
-		throw 52000, N'type kursu nie istnieje', 1
-		end
+        UPDATE courses
+        SET
+            TYPE_ID = ISNULL(@new_type_id, TYPE_ID)
+        WHERE
+            course_id = @course_id;
 
-	if @new_type not in ('webinar', 'course','studies')
-		begin;
-		throw 52000, N'nieprawidłowy typ produktu', 1
-		end
-
-
-	update products
-	set 
-	product_name = @new_product_name, 
-	start_date = @new_start_date, 
-	end_date = @new_end_date, 
-	type=@new_type, 
-	price=@new_price, 
-	initial_fee = @new_initial_fee, 
-	supervisor_id = @new_supervisor_id, 
-	language = @new_language,
-	students_limit = @new_students_limit
-	where product_id = @course_id
-
-	update courses
-	set type_id = @new_type_id
-	where course_id = @course_id
-	end try
-
-	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
-			=N'Błąd z aktualizowaniem kursu: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048)
+                = N'Błąd z aktualizowaniem kursu: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH;
+END;
 GO
 ```
 
@@ -1797,44 +1852,49 @@ Edytuje praktyki
 
 ```sql
 CREATE PROCEDURE [dbo].[editApprenticeship]
-	@apprenticeship_id int,
-	@new_apprenticeship_name varchar(50),
-	@new_start_date datetime,
-	@new_end_date datetime
+    @apprenticeship_id INT,
+    @new_apprenticeship_name VARCHAR(50) = NULL,
+    @new_start_date DATETIME = NULL,
+    @new_end_date DATETIME = NULL
 AS
 BEGIN
-	SET NOCOUNT ON;
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
 
-	begin try
+    BEGIN TRY
+        IF @new_start_date > @new_end_date
+        BEGIN;
+            THROW 52000, N'Daty nie mają sensu', 1;
+        END;
 
-	if @new_start_date > @new_end_date
-		begin;
-		throw 52000, N'Daty nie mają sensu', 1
-		end
+        IF NOT EXISTS (SELECT * FROM apprenticeships 
+		WHERE apprenticeship_id = @apprenticeship_id)
+        BEGIN;
+            THROW 52000, N'Dane praktyki nie istnieją', 1;
+        END;
 
-	if not exists(
-		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
-	)
-		begin;
-		throw 52000, N'Dane praktyki nie istnieją', 1
-   		end
+		IF EXISTS(SELECT * FROM apprenticeships 
+		WHERE apprenticeship_id = @apprenticeship_id AND start_date < GETDATE())
+		BEGIN;
+			THROW 52000, N'Praktyki się już zaczęły, nie można ich edytować!', 1;
+		END;
 
-	update apprenticeships
-	set
-	apprenticeship_name = @new_apprenticeship_name,
-	start_date = @new_start_date,
-	end_date = @new_end_date
-	where 
-	apprenticeship_id = @apprenticeship_id
+        UPDATE apprenticeships
+        SET
+            apprenticeship_name = ISNULL(@new_apprenticeship_name, apprenticeship_name),
+            start_date = ISNULL(@new_start_date, start_date),
+            end_date = ISNULL(@new_end_date, end_date)
+        WHERE
+            apprenticeship_id = @apprenticeship_id;
 
-	END TRY
-
-	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
-			=N'Błąd z aktualizowaniem praktyk: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048)
+                = N'Błąd z aktualizowaniem praktyk: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH;
+END;
 GO
 ```
 
@@ -1848,8 +1908,9 @@ Wyświetla wszystkie praktyki dla danych studiów
 CREATE PROCEDURE [dbo].[getApprenticeshipsForStudies] @studiesId int
 AS
     SELECT a.*
-    FROM apprenticeships a
-    JOIN studies_apprenticeships sa ON a.apprenticeship_id = sa.apprenticeship_id
+		FROM apprenticeships a
+			JOIN studies_apprenticeships sa 
+			ON a.apprenticeship_id = sa.apprenticeship_id
     WHERE sa.studies_id = studiesId;
 GO
 ```
@@ -2050,7 +2111,7 @@ END;
 
 20. Procedura getOwnedModules 
 
-zwraca posiadane moduły
+Zwraca posiadane moduły
 
 ```sql
 CREATE PROCEDURE [dbo].[getOwnedModules] (
@@ -2326,6 +2387,45 @@ END;
 GO
 
 <div style="page-break-after: always;"></div>
+
+```
+
+28. Procedura passAprenticeship
+
+Zmienia status zaliczenia praktyk przez danego studenta
+```sql
+CREATE PROCEDURE [dbo].[passApprenticeship] 
+	@student_id INT, 
+	@apprenticeship_id INT,
+	@passed BIT
+AS 
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT * 
+		FROM apprenticeship_pass 
+		WHERE apprenticeship_id = @apprenticeship_id 
+		AND student_id = @student_id)
+        BEGIN;
+            THROW 52000, N'Dany rekord nie istnieje', 1;
+        END;
+
+        UPDATE apprenticeship_pass
+        SET
+            passed = @passed
+        WHERE
+            student_id = @student_id 
+			AND apprenticeship_id = @apprenticeship_id;
+
+    END TRY
+    BEGIN CATCH
+        DECLARE @msg NVARCHAR(2048)
+                = N'Błąd z aktualizowaniem statusu: ' + ERROR_MESSAGE();
+        THROW 52000, @msg, 1;
+    END CATCH;
+END;
+GO
 
 ```
 
