@@ -210,8 +210,8 @@ CREATE TABLE [dbo].[products](
 	[start_date] [datetime] NOT NULL,
 	[end_date] [datetime] NOT NULL,
 	[type] [varchar](50) NOT NULL,
-	[price] [float] NOT NULL,
-	[initial_fee] [float] NOT NULL,
+	[price] [numeric](10,2) NOT NULL,
+	[initial_fee] [numeric](10,2) NOT NULL,
 	[supervisor_id] [int] NOT NULL,
 	[language] [varchar](50) NOT NULL,
 	[students_limit] [int] NULL,
@@ -283,7 +283,7 @@ CREATE TABLE [dbo].[modules](
 	[lecturer_id] [int] NOT NULL,
 	[translator_id] [int] NULL,
 	[students_limit] [int] NULL,
-	[single_buy_price] [float] NOT NULL,
+	[single_buy_price] [numeric](10,2) NOT NULL,
  CONSTRAINT [PK_modules_1] PRIMARY KEY CLUSTERED 
 (
 	[module_id] ASC
