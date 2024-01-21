@@ -1341,27 +1341,34 @@ Zmienia status płatności dla danego produktu i studenta
 
 ```sql
 CREATE PROCEDURE [dbo].[changeProductPaidStatus]
-	@student_id int,
-	@product_id int,
-	@initial_fee_paid_status bit,
-	@normal_price_paid_status bit
+	@student_id INT,
+	@product_id INT,
+	@initial_fee_paid_status BIT,
+	@normal_price_paid_status BIT
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
+		IF NOT EXISTS(
+			SELECT * 
+			FROM products_orders
+			WHERE student_id = @student_id AND product_id=@product_id
+		)
+		BEGIN;
+			THROW 52000, N'Podany rekord nie istnieje', 1;
+		END;
 		BEGIN
 			UPDATE products_orders
-				set initial_fee_paid = @initial_fee_paid_status, 
-					paid = @normal_price_paid_status
-				where student_id = @student_id and product_id = @product_id
-		END
+				SET initial_fee_paid = @initial_fee_paid_status, paid = @normal_price_paid_status
+				WHERE student_id = @student_id AND product_id = @product_id;
+		END;
 	END TRY
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z wpisywaniem statusu płatności: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
@@ -3116,28 +3123,28 @@ GO
 Trigger aktywujący się po uiszczeniu opłaty za produkt przez studenta (tabela products_orders), automatycznie ustawia przynależność do produktu (tabela products_memberships)
 
 ```sql
-CREATE TRIGGER [dbo].[addProductAfterPurchase] on [dbo].[products_orders]
-after update
+CREATE TRIGGER [dbo].[addProductAfterPurchase] ON [dbo].[products_orders]
+AFTER UPDATE
 AS 
 BEGIN
-   DECLARE @originalPaid bit;
-   select @originalPaid = paid from deleted
+   DECLARE @originalPaid BIT;
+   SELECT @originalPaid = paid FROM deleted;
 
-   declare @updatedPaid bit;
-   select @updatedPaid = paid from inserted
+   DECLARE @updatedPaid BIT;
+   SELECT @updatedPaid = paid FROM inserted;
 
-   declare @student_id int;
-   select @student_id = student_id from inserted
+   DECLARE @student_id INT;
+   SELECT @student_id = student_id FROM inserted;
 
-   declare @product_id int;
-   select @product_id = product_id from inserted
+   DECLARE @product_id INT;
+   SELECT @product_id = product_id FROM inserted;
 
-   if (@originalPaid = 0 and @updatedPaid = 1)
-	insert into products_memberships
+   IF (@originalPaid = 0 AND @updatedPaid = 1)
+	INSERT INTO products_memberships
 	(student_id,product_id)
-	values(@student_id, @product_id)
+	VALUES(@student_id, @product_id);
 	
-END
+END;
 GO
 
 ALTER TABLE [dbo].[products_orders] ENABLE TRIGGER [addProductAfterPurchase]
@@ -3151,28 +3158,31 @@ GO
 Trigger aktywujący się po uiszczeniu opłaty za moduł przez studenta (tabela modules_orders), automatycznie ustawia przynależność do modułu (tabela modules_memberships)
 
 ```sql
-CREATE TRIGGER [dbo].[addModuleAfterPurchase] on [dbo].[modules_orders]
-after update
+CREATE TRIGGER [dbo].[addModuleAfterPurchase] ON [dbo].[modules_orders]
+AFTER UPDATE
 AS 
 BEGIN
-   DECLARE @originalPaid bit;
-   select @originalPaid = paid from deleted
+   DECLARE @originalPaid BIT;
+   SELECT @originalPaid = paid FROM deleted;
 
-   declare @updatedPaid bit;
-   select @updatedPaid = paid from inserted
+   DECLARE @updatedPaid BIT;
+   SELECT @updatedPaid = paid FROM inserted;
 
-   declare @student_id int;
-   select @student_id = student_id from inserted
+   DECLARE @student_id INT;
+   SELECT @student_id = student_id FROM inserted;
 
-   declare @module_id int;
-   select @module_id = module_id from inserted
+   DECLARE @module_id INT;
+   SELECT @module_id = module_id FROM inserted;
 
-   if (@originalPaid = 0 and @updatedPaid = 1)
-	insert into modules_memberships
+   IF (@originalPaid = 0 AND @updatedPaid = 1)
+	INSERT INTO modules_memberships
 	(student_id,module_id)
-	values(@student_id, @module_id)
+	VALUES(@student_id, @module_id);
 	
-END
+END;
+GO
+
+ALTER TABLE [dbo].[modules_orders] ENABLE TRIGGER [addModuleAfterPurchase]
 GO
 ```
 
@@ -3183,18 +3193,18 @@ GO
 Trigger aktywujący się po dodaniu przynależności do modułu dla studenta (tabela modules_memberships), automatycznie dodaje rekord z obenością studenta na danym module
 
 ```sql
-CREATE TRIGGER [dbo].[addAttendance] on [dbo].[modules_memberships]
-after insert
+CREATE TRIGGER [dbo].[addAttendance] ON [dbo].[modules_memberships]
+AFTER INSERT
 AS 
 BEGIN
-   declare @student_id int;
-   select @student_id = student_id from inserted
+   DECLARE @student_id INT;
+   SELECT @student_id = student_id FROM INSERTed
 
-   declare @module_id int;
-   select @module_id= module_id from inserted
+   DECLARE @module_id int;
+   SELECT @module_id= module_id from INSERTed
 
-   insert into attendance(student_id,module_id,attended)
-   values(@student_id, @module_id, 0)
+   INSERT into attendance(student_id,module_id,attended)
+   VALUES(@student_id, @module_id, 0)
 	
 END
 GO
@@ -3210,20 +3220,21 @@ GO
 Trigger aktywujący się po dodaniu przynależności do studiów dla studenta (tabela products_memberships), automatycznie dodaje rekord ze stanem egzaminu końcowego dla tych studiów dla studenta (tabela studies_exam)
 ```sql
 CREATE TRIGGER [dbo].[addExamTrigger] ON [dbo].[products_memberships]
-	after insert
-as
-begin
-	declare @product_id int;
-	select @product_id = product_id from inserted
+	AFTER INSERT
+AS
+BEGIN
+	DECLARE @product_id INT;
+	SELECT @product_id = product_id FROM inserted;
 
-	declare @student_id int;
-	select @student_id = student_id from inserted
+	DECLARE @student_id INT;
+	SELECT @student_id = student_id FROM inserted;
 
-	if exists(select * from studies where studies_id = @product_id)
-		insert into studies_exam
+	IF EXISTS(SELECT * FROM studies WHERE studies_id = @product_id)
+		INSERT INTO studies_exam
 		(student_id, studies_id, passed)
-		values(@student_id, @product_id, 0)
-end
+		VALUES(@student_id, @product_id, 0);
+END;
+
 
 GO
 
@@ -3238,32 +3249,32 @@ GO
 Trigger aktywujący się po dodaniu przynależności do produktu dla studenta (tabela products_memberships), automatycznie ustawia przynależność do wszystkich modułów należących do produktu (tabela modules_memberships)
 
 ```sql
-CREATE TRIGGER [dbo].[addModulesOfProduct] on [dbo].[products_memberships]
-after insert
+CREATE TRIGGER [dbo].[addModulesOfProduct] ON [dbo].[products_memberships]
+AFTER INSERT
 AS 
 BEGIN
-	declare @student_id int;
-	select @student_id = student_id from inserted
+   DECLARE @student_id INT;
+   SELECT @student_id = student_id FROM inserted;
 
-	declare @product_id int;
-	select @product_id = product_id from inserted
+   DECLARE @product_id INT;
+   SELECT @product_id = product_id FROM inserted
 
-	;with
-	t1
-	as
-	(
-		select module_id 
-		from products_modules 
-		where product_id=@product_id
-	)
+   ;WITH
+   t1
+   AS
+   (
+   SELECT module_id FROM products_modules WHERE product_id=@product_id
+   )
 	
-	insert into modules_memberships(module_id, student_id)
-	select module_id, @student_id from t1
+	INSERT INTO modules_memberships(module_id, student_id)
+	SELECT module_id, @student_id FROM t1;
+
 	
-END
+END;
 GO
 
-ALTER TABLE [dbo].[products_memberships] ENABLE TRIGGER [addModulesOfProduct]
+ALTER TABLE [dbo].[products_memberships] ENABLE 
+TRIGGER [addModulesOfProduct]
 GO
 ```
 
