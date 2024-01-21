@@ -866,6 +866,153 @@ GO
 
 <div style="page-break-after: always;"></div>
 
+5. Widok attendanceOnFinishedProducts
+
+Wyświetla średnią obecność dla zakończonych produktów
+
+```sql
+CREATE VIEW [dbo].[attendanceOnFinishedProducts]
+AS
+SELECT        product_name, start_date, end_date, dbo.getAverageAttendanceOnProduct(product_id) AS attendance
+FROM            dbo.products
+WHERE        (end_date < GETDATE())
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+6. Widok checkModulesFullness
+
+Wyświetla dla każdego modułu limit studentów, ilość zapisanych studentów i czy moduł jest pełny
+
+```sql
+create view [dbo].[checkModulesFullness] as
+with t1 as (
+SELECT 
+    m.module_name, 
+    m.students_limit, 
+    COUNT(*) AS [amount of students],
+    CASE 
+        WHEN (students_limit is Null  OR COUNT(*) < m.students_limit) THEN 'not full'
+        ELSE 'full'
+    END AS status
+FROM modules_memberships AS mm
+JOIN modules AS m ON m.module_id = mm.module_id
+GROUP BY m.module_name, m.students_limit)
+
+SELECT 
+    m.module_name, 
+    m.students_limit, 
+    0 AS [amount of students],
+	'not full' AS status
+FROM modules AS m
+LEFT JOIN t1 ON m.module_name = t1.module_name
+WHERE t1.module_name IS NULL
+
+UNION ALL
+
+SELECT 
+    module_name, 
+    students_limit, 
+    [amount of students],
+	status
+FROM t1
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+7.Widok checkProductFullness
+
+Wyświetla dla każdego produktu limit studentów, ilość zapisanych studentów i czy produkt jest pełny
+
+```sql
+create view [dbo].[checkProductFullness] as
+with t1 as (
+SELECT 
+    p.product_name, 
+    p.students_limit, 
+    COUNT(*) AS [amount of students],
+    CASE 
+        WHEN (students_limit is Null  OR COUNT(*) < p.students_limit) THEN 'not full'
+        ELSE 'full'
+    END AS status
+FROM products_memberships AS pm
+JOIN products AS p ON p.product_id = pm.product_id
+GROUP BY p.product_name, p.students_limit)
+
+SELECT 
+    p.product_name, 
+    p.students_limit, 
+    0 AS [amount of students],
+	'not full' AS status
+FROM products AS p
+LEFT JOIN t1 ON p.product_name = t1.product_name
+WHERE t1.product_name IS NULL
+
+UNION ALL
+
+SELECT 
+    product_name, 
+    students_limit, 
+    [amount of students],
+	status
+FROM t1
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+8. Widok getOverlappingModulesForStudents
+
+Sprawdza dla każdego studenta czy jest zapisany na moduły które odbywają się w tym samym czasie.
+Jeżeli tak to wyświetla imię i nazwisko studenta, nazwy modułów które się pokrywają, i daty rozpoczęcia
+i zakończenia każdego modułu.
+
+```sql
+CREATE VIEW [dbo].[getOverlappingModulesForStudents] AS
+SELECT DISTINCT
+    s.name,
+    s.surname,
+    m1.module_name AS course_name_1,
+    m1.start_date AS start_date_1,
+    m1.end_date AS end_date_1,
+    m2.module_name AS course_name_2,
+    m2.start_date AS start_date_2,
+    m2.end_date AS end_date_2
+FROM
+    students AS s
+JOIN
+    modules_memberships AS mm1 ON s.student_id = mm1.student_id
+JOIN
+    modules AS m1 ON m1.module_id = mm1.module_id
+JOIN
+    modules_memberships AS mm2 ON s.student_id = mm2.student_id
+JOIN
+    modules AS m2 ON m2.module_id = mm2.module_id
+WHERE
+    m1.module_id < m2.module_id
+    AND (m1.start_date BETWEEN m2.start_date AND m2.end_date OR m1.end_date BETWEEN m2.start_date AND m2.end_date);
+
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+9. Widok showAllCourses
+
+Wyświetla nazwy wszystki kursów
+
+```sql
+create view [dbo].[showAllCourses] as
+select product_name
+from products
+where type = 'course'
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
 # Procedures
 
 1. Procedura changeStudentContactInfo
