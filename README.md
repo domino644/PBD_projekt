@@ -1069,24 +1069,92 @@ GO
 
 12. Widok showModuleRevenue
 
-Wyświetla przychód danego wygenerowany przez dany moduł
+Wyświetla przychód wygenerowany przez dany moduł
 
 ```sql
 CREATE VIEW [dbo].[showModuleRevenue]
 AS
 SELECT 
-	dbo.modules.module_id, 
-	dbo.modules.module_name, 
-	dbo.modules.type, 
-	dbo.modules.single_buy_price, 
-	SUM((dbo.modules.single_buy_price * dbo.modules_orders.paid) * 
-	(1 - dbo.modules_orders.discount)) AS revenue
-FROM dbo.modules_orders 
-	INNER JOIN dbo.modules 
-	ON dbo.modules_orders.module_id = dbo.modules.module_id
-GROUP BY dbo.modules.module_id, dbo.modules.module_name, dbo.modules.type, dbo.modules.single_buy_price;
+	modules.module_id, 
+	modules.module_name, 
+	modules.type, 
+	modules.single_buy_price, 
+	SUM((modules.single_buy_price * modules_orders.paid) * 
+	(1 - modules_orders.discount)) AS revenue
+FROM modules_orders 
+	INNER JOIN modules 
+	ON modules_orders.module_id = modules.module_id
+GROUP BY modules.module_id, 
+	modules.module_name, 
+	modules.type, 
+	modules.single_buy_price;
 GO
 ```
+<div style="page-break-after: always;"></div>
+
+13. Widok showProductRevenue
+
+Wyświetla przychód wygenerowany przez dany produkt
+
+```sql
+CREATE VIEW [dbo].[showProductRevenue]
+AS
+SELECT products.product_id, 
+	products.product_name, 
+	products.type, products.price, 
+	products.initial_fee, 
+	ISNULL(SUM((products.price * products_orders.paid + 
+		products.initial_fee * products_orders.initial_fee_paid) *
+		(1 - products_orders.discount)), 0) AS revenue
+FROM products_orders 
+	RIGHT OUTER JOIN products 
+	ON products_orders.product_id = products.product_id
+GROUP BY products.product_id, 
+	products.product_name, 
+	products.type, 
+	products.price, 
+	products.initial_fee
+GO
+```
+<div style="page-break-after: always;"></div>
+
+14. Widok showNotFullProducts
+
+Wyświetla wszystkie produkty na które limit miejsc nie został przekroczony
+
+```sql
+CREATE VIEW [dbo].[showNotFullProducts]
+AS
+SELECT products.product_id, 
+	products.product_name, 
+	products.start_date, 
+	products.end_date, 
+	products.type, 
+	products.price, 
+	products.initial_fee, p
+	roducts.supervisor_id, 
+	products.language, 
+	products.students_limit, 
+	products.students_limit - COUNT(products_memberships.student_id) 
+	AS remaining_spots
+FROM products 
+	LEFT OUTER JOIN products_memberships 
+	ON products.product_id = products_memberships.product_id
+GROUP BY products.product_id, 
+	products.product_name, 
+	products.start_date, 
+	products.end_date, 
+	products.type, 
+	products.price, 
+	products.initial_fee, 
+	products.supervisor_id, 
+	products.language, 
+	products.students_limit
+HAVING (products.students_limit - COUNT(products_memberships.student_id) IS NULL) 
+	OR (products.students_limit - COUNT(products_memberships.student_id) > 0)
+GO
+```
+
 <div style="page-break-after: always;"></div>
 
 # Procedures
@@ -1133,25 +1201,33 @@ Zmienia status obecności studenta na danym module na obecny
 
 ```sql
 CREATE PROCEDURE [dbo].[changeAttendance]
-	@student_id int,
-	@module_id int
+	@student_id INT,
+	@module_id INT,
+	@attended BIT
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
+		IF NOT EXISTS(
+			SELECT * 
+			FROM attendance
+			WHERE student_id = @student_id AND module_id = @module_id 
+		)
+		BEGIN;
+			THROW 52000, N'Podany rekord nie istnieje', 1;
+		END;
 		BEGIN
 			UPDATE attendance
-				set attended = 1
-				where student_id = @student_id and
-                                    module_id = @module_id
-		END
+			SET attended = @attended
+			WHERE student_id = @student_id AND module_id = @module_id;
+		END;
 	END TRY
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z wpisywaniem obecności: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
@@ -1176,10 +1252,14 @@ BEGIN
 	BEGIN TRY
 		BEGIN
 			UPDATE employees
-				set country = @country, city = @city,
-                                    adress = @adress, postal_code = @postal_code,
-                                    phone = @phone, email = @email
-				where employee_id = @id
+				SET 
+					country = @country, 
+					city = @city,
+					adress = @adress, 
+					postal_code = @postal_code,
+					phone = @phone, 
+					email = @email
+				WHERE employee_id = @id
 		END
 	END TRY
 	BEGIN CATCH
@@ -1976,36 +2056,32 @@ Dodaje pracownika
 
 ```sql
 CREATE PROCEDURE [dbo].[addEmployee]
-	@role varchar(50),
-	@name varchar(50),
-	@second_name varchar(50),
-	@surname varchar(50),
-	@birth_date date,
-	@country varchar(50),
-	@city varchar(50),
-	@adress varchar(50),
-	@postal_code varchar(50),
-	@phone varchar(50),
-	@email varchar(50),
-	@password varchar(50),
-	@title_of_courtesy varchar(10),
-	@hire_date date
+	@role VARCHAR(50),
+	@name VARCHAR(50),
+	@second_name VARCHAR(50),
+	@surname VARCHAR(50),
+	@birth_date DATE,
+	@country VARCHAR(50),
+	@city VARCHAR(50),
+	@adress VARCHAR(50),
+	@postal_code VARCHAR(50),
+	@phone VARCHAR(50),
+	@email VARCHAR(50),
+	@password VARCHAR(50),
+	@title_of_courtesy VARCHAR(10),
+	@hire_date DATE
 
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-    begin try
-		if @hire_date > @birth_date
-			begin;
-				throw 52000, N'Nie można się zatrudnić przed narodzinami', 1
-			end
-	DECLARE @employee_id INT
-		SELECT @employee_id = ISNULL(MAX(employee_id), 0) + 1
-		from employees
-	insert into employees
-		(employee_id,
-		role,
+    BEGIN TRY
+		IF @hire_date < @birth_date
+			BEGIN;
+				throw 52000, N'Nie można się zatrudnić przed narodzinami', 1;
+			END;
+	INSERT INTO employees
+	(ROLE,
 		name,
 		second_name,
 		surname,
@@ -2019,8 +2095,7 @@ BEGIN
 		password,
 		title_of_courtesy,
 		hire_date)
-	VALUES
-		(@employee_id,
+	VALUES(
 		@role,
 		@name,
 		@second_name,
@@ -2034,77 +2109,160 @@ BEGIN
 		@email,
 		@password,
 		@title_of_courtesy,
-		@hire_date)
-	end try
+		@hire_date
+	);
+	END TRY
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd przy dodawaniu nowego pracownika ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
 <div style="page-break-after: always;"></div>
 
-18.  Procedura addModuleMembership 
+18.  Procedura addModuleOrder
 
 Dodaje moduł do koszyka
 
 ```sql
 CREATE PROCEDURE [dbo].[addModuleOrder] (
-    @studentId INT,
-    @moduleId INT,
-	@orderDate DATETIME,
+	@student_id INT,
+	@module_id INT,
 	@discount FLOAT,
-	@initialFeePaid BIT,
+	@initial_fee_paid BIT,
 	@paid BIT,
-	@paymentLink varchar(255),
-	@payDeadline DATETIME
+	@payment_link VARCHAR(255),
+	@pay_deadline DATETIME
 )
 AS
 
-    INSERT INTO modules_orders
-		(student_id, 
-		module_id, 
-		order_date, 
-		discount, 
-		initial_fee_paid, 
-		paid, 
-		payment_link, 
-		pay_deadline)
-    VALUES 
-		(@studentId, 
-		@moduleId, 
-		@orderDate, 
-		@discount, 
-		@initialFeePaid, 
-		@paid, 
-		@paymentLink, 
-		@payDeadline);
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		IF (
+			DATEDIFF( DAY, GETDATE(), 
+			(SELECT start_date FROM modules WHERE module_id = @module_id)) <= 3
+		)
+		BEGIN;
+			THROW 52000, N'Nie można zamawiać 3 dni przed rozpoczęciem lub później', 1;
+		END;
+
+		IF EXISTS(
+			SELECT * 
+			FROM modules_orders
+			WHERE student_id = @student_id AND module_id = @module_id 
+		)
+		BEGIN;
+			THROW 52000, N'Moduł już w koszyku lub zakupiony', 1;
+		END;
+
+		BEGIN
+			INSERT INTO modules_orders(
+				student_id, 
+				module_id, 
+				order_date, 
+				discount, 
+				initial_fee_paid, 
+				paid, 
+				payment_link, 
+				pay_deadline
+			)
+			VALUES (
+				@student_id, 
+				@module_id, 
+				GETDATE(), 
+				@discount, 
+				@initial_fee_paid, 
+				@paid, 
+				@payment_link, 
+				@pay_deadline
+			);
+		END;
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg NVARCHAR(2048)
+			=N'Błąd z dodawaniem zamówienia ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
 <div style="page-break-after: always;"></div>
 
-19.  Procedura addProductsMembership dodaje produkt do koszyka
+19.  Procedura addProductsOrder
+
+Dodaje produkt do koszyka
 
 ```sql
-CREATE PROCEDURE addProductsMembership (
-    @studentId INT,
-    @productId INT,
-    @paid BIT,
-    @initialFeePaid BIT,
-    @discount FLOAT,
-    @payDeadline DATETIME
+CREATE PROCEDURE [dbo].[addProductsOrder] (
+	@student_id INT,
+	@product_id INT,
+	@discount FLOAT,
+	@initial_fee_paid BIT,
+	@paid BIT,
+	@payment_link varchar(255),
+	@pay_deadline DATETIME
 )
 AS
+
 BEGIN
-    INSERT INTO products_membership 
-	(student_id, product_id, paid, initial_fee_paid, discount, pay_deadline)
-    VALUES 
-	(@studentId, @productId, @paid, @initialFeePaid, @discount, @payDeadline);
-END;
+	SET NOCOUNT ON;
+	BEGIN TRY
+		IF (
+			DATEDIFF( day, GETDATE(), 
+			(SELECT start_date FROM products WHERE product_id = @product_id)) <= 3
+			and (SELECT type FROM products WHERE product_id = @product_id) 
+			IN ('course', 'studies')
+		)
+		BEGIN;
+			THROW 52000, N'Nie można zamawiać 3 dni przed rozpoczęciem lub później', 1
+		END
+
+		IF  EXISTS(
+			SELECT * 
+			FROM products_orders
+			WHERE student_id = @student_id and product_id = @product_id 
+		)
+		BEGIN;
+			THROW 52000, N'Produkt już w koszyku lub zakupiony', 1
+		END
+
+		BEGIN
+			INSERT INTO products_orders(
+				student_id, 
+				product_id, 
+				order_date, 
+				discount, 
+				initial_fee_paid, 
+				paid, 
+				payment_link, 
+				pay_deadline
+			)
+			VALUES (
+				@student_id, 
+				@product_id, 
+				GETDATE(), 
+				@discount, 
+				@initial_fee_paid, 
+				@paid, 
+				@payment_link, 
+				@pay_deadline
+			);
+		END
+	END TRY
+	BEGIN CATCH
+		DECLARE @msg nvarchar(2048)
+			=N'Błąd z dodawaniem zamówienia ' + ERROR_MESSAGE();
+		THROW 52000, @msg, 1
+	END CATCH
+END
+
+GO
+
 ```
 
 <div style="page-break-after: always;"></div>
@@ -2167,38 +2325,39 @@ Przypisuje praktyki do studiów
 
 ```sql
 CREATE PROCEDURE [dbo].[assignApprenticeshipToStudies]
-	@studies_id int,
-	@apprenticeship_id int
+	@studies_id INT,
+	@apprenticeship_id INT
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-    	begin try
-		if not exists(
-		select * from apprenticeships where apprenticeship_id = @apprenticeship_id
+    BEGIN TRY
+		IF NOT EXISTS(
+			SELECT * FROM apprenticeships 
+			WHERE apprenticeship_id = @apprenticeship_id
 		)
-		begin;
-			throw 52000, N'Dane praktyki nie istnieją', 1
-		end
+		BEGIN;
+			THROW 52000, N'Dane praktyki nie istnieją', 1;
+		END;
 
-		if not exists(
-		select * from studies where studies_id = @studies_id
+		IF NOT EXISTS(
+			SELECT * FROM studies WHERE studies_id = @studies_id
 		)
-		begin;
-			throw 52000, N'Dane studia nie istnieją', 1
-		end
+		BEGIN;
+			throw 52000, N'Dane studia nie istnieją', 1;
+		END;
 
-		insert into studies_appreticeships
-		(studies_id, apprenticeship_id)
-		values(@studies_id, @apprenticeship_id)
-	end try
+		INSERT INTO studies_appreticeships
+			(studies_id, apprenticeship_id)
+		VALUES (@studies_id, @apprenticeship_id);
+	END TRY
 
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z przypisywaniem studiów do praktyk: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
@@ -2210,39 +2369,40 @@ Przypisuje moduł do produktu
 
 ```sql
 CREATE PROCEDURE [dbo].[assignModuleToProduct]
-	@module_id int,
-	@product_id int
+	@module_id INT,
+	@product_id INT
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-	begin try
-	if not exists(
-	select * from modules where module_id = @module_id
+   BEGIN TRY
+	IF NOT EXISTS(
+		SELECT * FROM modules WHERE module_id = @module_id
 	)
-	begin;
-		throw 52000, N'Dany moduł nie istnieje', 1
-	end
+	BEGIN;
+		throw 52000, N'Dany moduł nie istnieje', 1;
+	END;
 
-	if not exists (
-	select * from products where product_id = @product_id
+	IF NOT EXISTS (
+		SELECT * FROM products WHERE product_id = @product_id
 	)
-	begin;
-		throw 52000, N'Dany produkt nie istnieje', 1
-	end
+	BEGIN;
+		throw 52000, N'Dany produkt nie istnieje', 1;
+	END;
 
-	insert into products_modules
-	(product_id, module_id)
-	values(@product_id, @module_id)
-	end try
+	INSERT INTO products_modules
+		(product_id, module_id)
+	VALUES (@product_id, @module_id);
+   END TRY
 
    BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z przypisywaniem modułu do produktu: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
+
 ```
 
 <div style="page-break-after: always;"></div>
@@ -2253,47 +2413,45 @@ Przyznaje zniżkę studentowi na moduł
 
 ```sql
 CREATE PROCEDURE [dbo].[addDiscountForModule]
-	@student_id int,
-	@module_id int,
-	@discount float
+	@student_id INT,
+	@module_id INT,
+	@discount FLOAT
 AS
 BEGIN
 	SET NOCOUNT ON;
-	begin try
-		if @discount > 1
-			begin;
-			throw 52000, N'Zniżka nie może byc większa niż 100%', 1
-			end
+	BEGIN TRY
+		IF @discount > 1
+		BEGIN;
+			throw 52000, N'Zniżka nie może byc większa niż 100%', 1;
+		END;
 
-		if not exists(select * from students where student_id = @student_id)
-			begin;
-			throw 52000, N'Nie ma takiego studenta', 1
-			end
+		IF NOT EXISTS(SELECT * FROM students WHERE student_id = @student_id)
+		BEGIN;
+			throw 52000, N'Nie ma takiego studenta', 1;
+		END;
 
-		if not exists(select * from modules where module_id = @module_id)
-			begin;
-			throw 52000, N'Nie ma takiego modułu', 1
-			end
+		IF NOT EXISTS(SELECT * FROM modules WHERE module_id = @module_id)
+		BEGIN;
+			throw 52000, N'Nie ma takiego modułu', 1;
+		END;
 
-		if not exists(
-			select * from modules_memberships 
-			where module_id = @module_id and student_id = @student_id
-		)
-			begin;
-			throw 52000, N'Student nie posiada tego modułu w koszyku', 1
-			end
+		IF NOT EXISTS(SELECT * FROM modules_memberships WHERE module_id = @module_id AND student_id = @student_id)
+		BEGIN;
+			throw 52000, N'Student nie posiada tego modułu w koszyku', 1;
 
-		update modules_orders
-		set
+		END;
+
+		UPDATE modules_orders
+		SET
 		discount = @discount
-		where module_id = @module_id and student_id = @student_id
-	end try
+		WHERE module_id = @module_id AND student_id = @student_id;
+	END TRY
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z dodawaniem zniżki: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
@@ -2305,47 +2463,45 @@ Przyznaje zniżkę studentowi na produkt
 
 ```sql
 CREATE PROCEDURE [dbo].[addDiscountForProduct]
-	@student_id int,
-	@product_id int,
-	@discount float
+	@student_id INT,
+	@product_id INT,
+	@discount FLOAT
 AS
 BEGIN
 	SET NOCOUNT ON;
-	begin try
-		if @discount > 1
-			begin;
-			throw 52000, N'Zniżka nie może byc większa niż 100%', 1
-			end
+	BEGIN TRY
+		IF @discount > 1
+		BEGIN;
+			throw 52000, N'Zniżka nie może byc większa niż 100%', 1;
+		END;
 
-		if not exists(select * from students where student_id = @student_id)
-			begin;
-			throw 52000, N'Nie ma takiego studenta', 1
-			end
+		IF NOT EXISTS(SELECT * FROM students WHERE student_id = @student_id)
+		BEGIN;
+			throw 52000, N'Nie ma takiego studenta', 1;
+		END;
 
-		if not exists(select * from products where product_id = @product_id)
-			begin;
-			throw 52000, N'Nie ma takiego produktu', 1
-			end
+		IF NOT EXISTS(SELECT * FROM products WHERE product_id = @product_id)
+		BEGIN;
+			throw 52000, N'Nie ma takiego produktu', 1;
+		END;
 
-		if not exists(
-			select * from products_memberships 
-			where product_id = @product_id and student_id = @student_id
-		)
-			begin;
-			throw 52000, N'Student nie posiada tego produktu w koszyku', 1
-			end
+		IF NOT EXISTS(SELECT * FROM products_memberships WHERE product_id = @product_id AND student_id = @student_id)
+		BEGIN;
+			throw 52000, N'Student nie posiada tego produktu w koszyku', 1;
 
-		update products_orders
-		set
+		END;
+
+		UPDATE products_orders
+		SET
 		discount = @discount
-		where product_id = @product_id and student_id = @student_id
-	end try
+		WHERE product_id = @product_id AND student_id = @student_id;
+	END TRY
 	BEGIN CATCH
-		DECLARE @msg nvarchar(2048)
+		DECLARE @msg NVARCHAR(2048)
 			=N'Błąd z dodawaniem zniżki: ' + ERROR_MESSAGE();
-		THROW 52000, @msg, 1
-	END CATCH
-END
+		THROW 52000, @msg, 1;
+	END CATCH;
+END;
 GO
 ```
 
@@ -2646,16 +2802,15 @@ Wyświetla wszystke produkty o danej nazwie
 ```sql
 CREATE FUNCTION [dbo].[showProductsWithName]
 (	
-	@name varchar(50)
+	@name VARCHAR(50)
 )
 RETURNS TABLE 
 AS
 RETURN 
 (
-	select * 
-	from products 
-	where product_name = @name
-)
+	SELECT * FROM products 
+	WHERE product_name LIKE CONCAT('%', @name, '%')
+);
 GO
 ```
 
@@ -2734,19 +2889,21 @@ Wyświetla dla podanego wykładowcy ile modułów prowadzi
 ```sql
 CREATE FUNCTION [dbo].[getNumberOfModulesSupervisedByLecturer]
 (
-	@lecturer_id int
+	@lecturer_id INT
 )
-RETURNS int
+RETURNS INT
 AS
 BEGIN
 	
-	DECLARE @numberOfModules int;
+	DECLARE @numberOfModules INT;
 
-	select @numberOfModules = count(module_id) from modules where lecturer_id = @lecturer_id
+	SELECT @numberOfModules = COUNT(module_id) FROM modules 
+	WHERE lecturer_id = @lecturer_id;
 
-	return (@numberOfModules)
+	RETURN (@numberOfModules);
 
-END
+END;
+GO
 ```
 
 <div style="page-break-after: always;"></div>
@@ -2758,18 +2915,18 @@ Wyświetla dla danego tłumacza w ilu modułach jest tłumaczem
 ```sql
 CREATE FUNCTION [dbo].[getNumberOfModulesTranslatedByTranslator]
 (
-	@translator_id int
+	@translator_id INT
 )
-RETURNS int
+RETURNS INT
 AS
 BEGIN
-	-- Declare the return variable here
-	DECLARE @numberOfModules int;
+	DECLARE @numberOfModules INT;
 
-	select @numberOfModules = count(module_id) from modules where translator_id = @translator_id
+	SELECT @numberOfModules = COUNT(module_id) FROM modules 
+	WHERE translator_id = @translator_id;
 
-	return (@numberOfModules)
-END
+	RETURN (@numberOfModules);
+END;
 GO
 ```
 
@@ -2782,27 +2939,119 @@ Dla podanych studiów zwraca ile procent studentów zdało egzamin
 ```sql
 CREATE FUNCTION [dbo].[getPassRateOfExam]
 (
-	@studies_id int
+	@studies_id INT
 )
-RETURNS float
+RETURNS FLOAT
 AS
 BEGIN
-	DECLARE @total_students int;
+	DECLARE @total_students INT;
 
-	select @total_students = count(student_id)
-	from studies_exam
-	where studies_id = @studies_id
+	SELECT @total_students = COUNT(student_id)
+	FROM studies_exam
+	WHERE studies_id = @studies_id;
 
-	declare @passed int;
+	DECLARE @passed INT;
 	
-	select @passed = count(student_id) from studies_exam where studies_id=@studies_id and passed=1
+	SELECT @passed = COUNT(student_id) FROM studies_exam 
+	WHERE studies_id=@studies_id AND passed=1;
 
-	if @total_students = 0
-		return 0.0
+	IF @total_students = 0
+		RETURN 0.0;
 
-	return (@passed*100.0 / @total_students)
+	RETURN (@passed*100.0 / @total_students);
 
-END
+END;
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+17. Funkcja getStudentsAttendanceRate
+
+Dla podanego studenta oraz studiów zwraca procent obecności na modułach
+
+```sql
+CREATE FUNCTION [dbo].[getStudentsAttendanceRate]
+(
+	@studies_id INT,
+	@student_id INT
+)
+RETURNS FLOAT
+AS
+BEGIN
+		DECLARE @attendence_rate FLOAT;
+		DECLARE @all_attendence INT;
+		DECLARE @attended INT;
+
+		WITH t1 AS
+		(
+			SELECT module_id FROM products_modules
+			WHERE product_id = @studies_id
+		)
+		SELECT @all_attendence = COUNT(*) FROM attendance AS a
+		JOIN t1 ON t1.module_id = a.module_id 
+			AND a.student_id = @student_id;
+
+		WITH t1 AS
+		(
+			SELECT module_id FROM products_modules
+			WHERE product_id = @studies_id
+		)
+		SELECT @attended = COUNT(*) FROM attendance AS a
+		JOIN t1 ON t1.module_id = a.module_id 
+			AND a.attended = 1
+			AND a.student_id = @student_id;
+
+		IF @all_attendence = 0
+			BEGIN;
+				RETURN (NULL);
+			END;
+
+		RETURN ((CAST(@attended AS FLOAT) / @all_attendence) * 100);
+END;
+
+GO
+```
+
+<div style="page-break-after: always;"></div>
+
+18. Funkcja getAverageAttendanceOnProduct
+
+Dla podanych studiów zwraca procent obecności na wszystkich modułach
+
+```sql
+CREATE FUNCTION [dbo].[getAverageAttendanceOnProduct]
+(
+	@product_id INT
+)
+RETURNS FLOAT
+AS
+BEGIN
+	DECLARE @all_attendence INT;
+	DECLARE @attended INT;
+
+	WITH t1 AS (
+		SELECT module_id FROM products_modules WHERE product_id = @product_id
+	)
+
+	SELECT @all_attendence = COUNT(*) FROM attendance AS a
+	JOIN t1 ON t1.module_id = a.module_id;
+	
+	WITH t1 AS (
+		SELECT module_id FROM products_modules WHERE product_id = @product_id
+	)
+
+	SELECT @attended = COUNT(*) FROM attendance AS a
+	JOIN t1 ON t1.module_id = a.module_id AND attended = 1;
+
+
+	IF @all_attendence = 0
+		BEGIN;
+			RETURN (NULL);
+		END;
+
+	RETURN ((CAST(@attended AS FLOAT) / @all_attendence)*100);
+END;
 GO
 ```
 
@@ -2965,3 +3214,4 @@ GO
 ALTER TABLE [dbo].[products_memberships] ENABLE TRIGGER [addModulesOfProduct]
 GO
 ```
+
